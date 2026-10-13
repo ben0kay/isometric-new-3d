@@ -1,6 +1,6 @@
 using Godot;
 
-// Thin player coordinator. Keep input, movement, visuals, inventory etc. independent.
+// Thin player coordinator; the visual can aim independently of physics movement.
 public partial class Player : CharacterBody3D
 {
     [Export] public PlayerConfig Config { get; set; }
@@ -11,19 +11,38 @@ public partial class Player : CharacterBody3D
     {
         Config ??= GD.Load<PlayerConfig>("res://PLAYER/PlayerConfig.tres");
         _visual = GetNode<Node3D>("Visual");
+        PlayerInput.Configure(Config);
     }
 
     public override void _PhysicsProcess(double delta)
     {
         if (FollowCamera == null)
             return;
+
         PlayerMotor.Tick(this, FollowCamera, Config, delta);
-        Vector3 planarVelocity = new(Velocity.X, 0, Velocity.Z);
-        if (planarVelocity.LengthSquared() > 0.025f)
-        {
-            float target = Mathf.Atan2(-planarVelocity.X, -planarVelocity.Z);
-            _visual.Rotation = new Vector3(0, Mathf.LerpAngle(_visual.Rotation.Y, target,
-                Mathf.Clamp(Config.VisualTurnSpeed * (float)delta, 0, 1)), 0);
-        }
+
+        Vector3 facing = Config.FaceCursor ? CursorDirection() : new Vector3(Velocity.X, 0, Velocity.Z);
+        if (facing.LengthSquared() < 0.0001f)
+            return;
+
+        // This prototype's visible forward direction is local -Z.
+        float targetYaw = Mathf.Atan2(-facing.X, -facing.Z);
+        float weight = Mathf.Clamp(Config.VisualTurnSpeed * (float)delta, 0f, 1f);
+        _visual.Rotation = new Vector3(0, Mathf.LerpAngle(_visual.Rotation.Y, targetYaw, weight), 0);
+    }
+
+    private Vector3 CursorDirection()
+    {
+        Vector2 mouse = GetViewport().GetMousePosition();
+        Vector3 origin = FollowCamera.ProjectRayOrigin(mouse);
+        Vector3 ray = FollowCamera.ProjectRayNormal(mouse);
+        // Aim along the player-height horizontal plane, not at a mesh or UI element.
+        Plane aimPlane = new(Vector3.Up, GlobalPosition.Y);
+        Vector3? hit = aimPlane.IntersectsRay(origin, ray);
+        if (!hit.HasValue)
+            return Vector3.Zero;
+        Vector3 direction = hit.Value - GlobalPosition;
+        direction.Y = 0f;
+        return direction;
     }
 }

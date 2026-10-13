@@ -15,6 +15,10 @@ public partial class SunLighting : DirectionalLight3D
         LookAt(GlobalPosition + direction, Vector3.Up);
         LightEnergy = Config.SunEnergy;
         ShadowEnabled = Config.SunShadows;
+        DirectionalShadowMaxDistance = Config.ShadowMaxDistance;
+        ShadowBias = Config.ShadowBias;
+        ShadowNormalBias = Config.ShadowNormalBias;
+        ShadowBlur = Config.ShadowBlur;
         if (EnvironmentNode?.Environment != null)
             EnvironmentNode.Environment.AmbientLightEnergy = Config.AmbientEnergy;
     }
