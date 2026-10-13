@@ -20,6 +20,10 @@ public partial class SunLighting : DirectionalLight3D
         ShadowNormalBias = Config.ShadowNormalBias;
         ShadowBlur = Config.ShadowBlur;
         if (EnvironmentNode?.Environment != null)
+        {
+            EnvironmentNode.Environment.AmbientLightSource = Godot.Environment.AmbientSource.Color;
+            EnvironmentNode.Environment.AmbientLightColor = Config.AmbientColor;
             EnvironmentNode.Environment.AmbientLightEnergy = Config.AmbientEnergy;
+        }
     }
 }
