@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://VISUALS/Lighting/SunLighting.cs" id="1"]
+[ext_resource type="Resource" path="res://VISUALS/VisualConfig.tres" id="2"]
+
+[node name="Sun" type="DirectionalLight3D"]
+light_energy = 1.3
+shadow_enabled = true
+script = ExtResource("1")
+Config = ExtResource("2")
