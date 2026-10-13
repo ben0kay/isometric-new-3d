@@ -427,3 +427,12 @@ Biome terrain tuning remains in TestTerrain.tres. Shared HeightSampler, TerrainM
 WorldBounds and signed ChunkCoordinates own finite indexing. WorldGenerationSettings under Persistence captures versioned creation inputs for future saves.
 No disk persistence is implemented in this pass; S1–S3 remain next. Generic/exclusive content spawning remains later.
 See `WORLD/TERRAIN_PROTOTYPE.md` for tuning, limitations, save integration and executable checks.
+
+## 15. Test biome content and debug HUD
+
+`DEBUG/Hud.cs` reads player X/Y/Z, active biome ID, chunk coordinate and loaded chunk count.
+`DebugConfig.tres` controls visibility and refresh interval.
+Test biome assets live in `Definitions/Test/Content/ObjectsTest/`; `TestContent.tres` configures the unique `TestContentGeneration.cs` strategy.
+The strategy implements `WORLD/Contents/Placement/WorldContentGeneration.cs`; shared ChunkManager owns lifecycle and invokes the biome reference.
+This is biome-exclusive placeholder content only; the generic content catalog remains future work.
+Placement IDs are deterministic, but persistence overlays and placement-settings snapshots remain future saving work.

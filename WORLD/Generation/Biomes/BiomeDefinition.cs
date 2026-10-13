@@ -11,4 +11,7 @@ public partial class BiomeDefinition : Resource
 
     [ExportGroup("Terrain")]
     [Export] public TerrainProfile Terrain { get; set; }
+    [ExportGroup("Content")]
+    [Export] public WorldContentGeneration ContentGeneration { get; set; }
 }
+

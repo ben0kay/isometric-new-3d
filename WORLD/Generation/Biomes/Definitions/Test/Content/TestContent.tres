@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TestContentGeneration" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://WORLD/Generation/Biomes/Definitions/Test/Content/TestContentGeneration.cs" id="1"]
+[ext_resource type="PackedScene" path="res://WORLD/Generation/Biomes/Definitions/Test/Content/ObjectsTest/Beacon.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://WORLD/Generation/Biomes/Definitions/Test/Content/ObjectsTest/Boulder.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://WORLD/Generation/Biomes/Definitions/Test/Content/ObjectsTest/Crate.tscn" id="4"]
+
+[resource]
+script = ExtResource("1")
+Objects = Array[PackedScene]([ExtResource("2"), ExtResource("3"), ExtResource("4")])
+ObjectsPerChunk = 25
+MaxSlopeDegrees = 35.0
+SpawnClearanceMeters = 8.0

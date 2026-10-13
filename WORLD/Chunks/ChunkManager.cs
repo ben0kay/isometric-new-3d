@@ -103,6 +103,10 @@ public partial class ChunkManager : Node3D
         if (!_bounds.Contains(coordinate) || _loaded.ContainsKey(coordinate)) return;
         var chunk = new TerrainChunk();
         chunk.Build(coordinate, GenerationSettings, _sampler, _material);
+        var content = new Node3D { Name = "Content" };
+        chunk.AddChild(content);
+        if (Config.PrototypeBiome?.Id == GenerationSettings.BiomeId)
+            Config.PrototypeBiome.ContentGeneration?.Populate(content, coordinate, GenerationSettings, _sampler);
         AddChild(chunk);
         chunk.ResetPhysicsInterpolation();
         _loaded.Add(coordinate, chunk);
