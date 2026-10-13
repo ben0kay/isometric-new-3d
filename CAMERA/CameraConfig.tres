@@ -5,3 +5,5 @@
 [resource]
 script = ExtResource("1")
 DownwardAngleDegrees = 30.0
+OrthographicSize = 26.0
+CameraDistance = 50.0

@@ -1,12 +1,11 @@
 [gd_scene format=3 uid="uid://msuahynyt07r"]
 
-[ext_resource type="Script" path="res://WORLD/Chunks/ChunkManager.cs" id="1"]
-[ext_resource type="Resource" path="res://WORLD/WorldConfig.tres" id="5"]
+[ext_resource type="Script" uid="uid://dmx0ucmbqebw8" path="res://WORLD/Chunks/ChunkManager.cs" id="1"]
 [ext_resource type="PackedScene" path="res://PLAYER/Player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://CAMERA/IsometricCamera.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://VISUALS/Lighting/SunLighting.tscn" id="4"]
-
-[ext_resource type="Script" path="res://DEBUG/Hud.cs" id="6"]
+[ext_resource type="Resource" path="res://WORLD/WorldConfig.tres" id="5"]
+[ext_resource type="Script" uid="uid://075kcvqiqc4v" path="res://DEBUG/Hud.cs" id="6"]
 [ext_resource type="Resource" path="res://DEBUG/DebugConfig.tres" id="7"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
@@ -46,7 +45,7 @@ FollowCamera = NodePath("../IsometricCamera")
 [node name="IsometricCamera" parent="." unique_id=396575037 node_paths=PackedStringArray("Target") instance=ExtResource("3")]
 Target = NodePath("../Player")
 
-[node name="DebugHud" type="CanvasLayer" parent="." node_paths=PackedStringArray("Target", "Terrain")]
+[node name="DebugHud" type="CanvasLayer" parent="." unique_id=2009546495 node_paths=PackedStringArray("Target", "Terrain")]
 script = ExtResource("6")
 Config = ExtResource("7")
 Target = NodePath("../Player")
