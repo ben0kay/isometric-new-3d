@@ -1,8 +1,15 @@
-// Muted sediment with sparse gravel; not a separate bright sand island.
+// Defines muted sediment coloration with fine grain and broad tonal variation.
+
 // =========================================================
-// Restrained grain and flecks read inside a low-contrast deposit.
-vec3 dust_surface(vec3 low_color, vec3 high_color, float strata, float detail, float grain, float pebbles, float strength) {
-    vec3 surface = mix(low_color, high_color, 0.35 + strata * 0.30);
-    surface *= 1.0 + ((detail - 0.5) * 0.16 + (grain - 0.5) * 0.20) * strength;
-    return mix(surface, surface * 0.78, pebbles * strength);
+// Produce a dusty surface that blends into basalt without bright golden blobs.
+vec3 dust_surface(float strata, float detail, float grain, vec3 dust_low, vec3 dust_high) {
+    vec3 dust = mix(
+        dust_low,
+        dust_high,
+        strata
+    );
+
+    dust += vec3((detail - 0.5) * 0.009);
+    dust += vec3((grain - 0.5) * 0.012);
+    return dust;
 }

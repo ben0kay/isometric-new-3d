@@ -529,3 +529,15 @@ New surface composition and terrain-flow tuning lives in BiomeSurfaceProfile and
 Reusable weighting stays in VISUALS/Surfaces/Shared/ and material recipes in Generic/.
 No terrain simulation, camera, lighting or fog changes accompany this refinement.
 See VISUALS/Surfaces/README.md for Inspector controls and unverified runtime checks.
+
+## 19. Faithful basalt-first reference port (supersedes earlier Test palette tuning)
+VISUALS/Surfaces/GroundSurface.gdshader now follows the original 2D basalt → dust → mineral layering.
+Generic/ contains ported BasaltSurface, DustSurface, MineralSurface, GreyRockSurface, SteepRockSurface,
+GrassSurface, MudSurface and StonyPathSurface includes. Shared/GroundSurfaceNoise.cs reuses the original
+512 × 512 seamless SimplexSmooth four-octave noise settings.
+BiomeSurfaceProfile and Test/Surfaces/TestSurfaces.tres supply reference palettes and tunable layers.
+Test defaults to barren basalt with vegetation disabled; optional grass/soil/mud/stony layers remain reusable.
+Previously exported experimental flow/weight parameters were replaced by reference sampling controls;
+the matching Test resource is updated in this commit. Future custom surface profiles must migrate those obsolete settings.
+Existing terrain, collision, player, camera and scene lighting are unchanged. Ground fog remains a later task.
+See VISUALS/Surfaces/README.md for formula reuse, differences, controls and unverified runtime checks.

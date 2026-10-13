@@ -1,8 +1,18 @@
-// Sparse ground fibres and fine grain adapted from the 2D grass material.
+// Creates neutral grass-ground detail.
+// Biome colours are supplied by the parent ground shader.
+
 // =========================================================
-// Small brightness changes preserve material detail without pale camouflage islands.
-vec3 grass_surface(vec3 low_color, vec3 high_color, float strata, float detail, float grain, float strength) {
-    vec3 surface = mix(low_color, high_color, 0.35 + strata * 0.30);
-    float fibres = smoothstep(0.48, 0.78, detail) - 0.5;
-    return surface * (1.0 + (fibres * 0.07 + (grain - 0.5) * 0.16) * strength);
+// Produce softly mottled ground without drawing individual grass blades.
+vec3 grass_surface(
+    float strata, float detail, float grain,
+    vec3 shade_tint, vec3 main_tint
+) {
+    float mixture = smoothstep(0.15, 0.85, strata);
+    vec3 surface = mix(shade_tint, main_tint, mixture);
+
+    float fibres = smoothstep(0.48, 0.78, detail);
+    float brightness = 0.92 + fibres * 0.08
+        + (grain - 0.5) * 0.035;
+
+    return surface * brightness;
 }

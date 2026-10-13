@@ -1,83 +1,87 @@
-# Ground surface prototype
+# Basalt-first ground: faithful 2D material adaptation
 
-One shared spatial shader blends soil, grass, dusty gravel and slope rock on existing terrain.
-Generic .gdshaderinc files provide reusable palette functions; shared helpers provide world-space noise/masks.
-Test's settings live in WORLD/Generation/Biomes/Definitions/Test/Surfaces/TestSurfaces.tres and are referenced by Test.tres.
-GroundSurfaceMaterial.cs applies that resource once at world startup. Restart gameplay after editing the profile.
-GrassCoverage/DustCoverage are mask controls, not exact area percentages; dust blends over grass, then slope rock blends over both.
-Rock fades in from 18 degrees to 36 degrees by default, with subtle noise breakup.
-PatchScaleMeters sets broad patches; DetailScaleMeters/DetailStrength set fine grain, faded with distance to reduce aliasing.
-No TIME, per-chunk RNG, vertex displacement, geometry/collision changes or duplicate chunk materials.
-World X/Z and saved terrain seed drive cosmetic patterns; there is no camera-dependent patch placement.
-Purely visual palettes currently follow resources on restart, not a saved surface snapshot. Save versioning for authored biome appearance remains future work.
-This is procedural colour/grain, not photographed textures, physical gravel, grass meshes, or a full triplanar texture system.
+This implementation supersedes earlier soil/grass camouflage experiments.
+Source: ben0kay/isometric-new-2d, especially GroundSun.gdshader and VISUALS/Drawings/Ground/.
 
-Local validation:
-1. Build C#; launch World.tscn and check Godot's shader error panel.
-2. Walk across positive/negative chunk seams; inspect colour continuity.
-3. Travel away/back; patterns at the same position should remain fixed.
-4. Climb the mountain at X -100/Z -100; look for gradual grey rock on its steep flanks.
-5. Set coverages to 0/1 and adjust palette/patch size; restart and check expected changes.
-6. Compare collision/movement to before; shader only changes ALBEDO/ROUGHNESS/SPECULAR.
-Godot/.NET were unavailable during authoring. Shader compilation, live appearance and GPU timings require local verification.
+## What was ported
+| Reference | 3D adaptation |
+| --- | --- |
+| GroundSurfaceNoise.cs | Same 512 × 512 seamless normalized SimplexSmooth texture, seed 64127, frequency 0.025, four FBM octaves; shared and mipmapped |
+| BasaltSurface | Original colour mix, sparse fracture gate, detail and grain arithmetic; palette/strength become parameters |
+| DustSurface | Original muted sediment formula and grain amplitudes |
+| MineralSurface | Original narrow fracture veins and restrained reflected mineral tint; no emission |
+| GreyRockSurface | Original exposed-grey-rock mix, fractures and grain |
+| SteepRockSurface | Original two neighborhood searches for irregular angular joints/chips; palette parameterized |
+| GrassSurface | Original optional neutral fibre/mottle recipe |
+| MudSurface | Original warped winding-channel recipe |
+| StonyPathSurface | Original subdued gravel/fleck recipe |
+| GroundSun layering | Basalt → dust → minerals → optional weathering/grass/mud/stony layers → slope rock |
+| BiomeGroundMap | Preserve separation of biome data from presentation; use existing 3D mesh normals instead of padded 2D biome/slope texture baking |
 
-## Detail pass adapted from 2D
-The shader now uses four rotated noise octaves and domain-warped masks to make patch edges less blob-like.
-Generic recipes provide grass fibres, soil grain, muted sediment/gravel flecks, and rock fractures.
-Test palette is muted; patch scale is 10 m, medium detail scale 0.35 m, and detail strength 0.35.
-Fine detail fades with screen footprint to reduce shimmer. No physical mesh displacement or baked lighting is added.
-C# surface profile and material factory use regions according to NOTES/CodePreferences.md.
-This remains procedural appearance, not an exact reproduction of the 2D baking/lighting pipeline.
-Extra noise evaluations increase shader cost; GPU performance has not been measured here.
+Sampling frequencies/offsets at defaults match GroundSun exactly:
+dust 0.0039, minerals 0.0061, strata 0.035, detail 0.22, grain 2.7.
+MetersPerReferenceTile maps actual meters to logical reference tiles. Default is one meter per tile.
+OffsetPatternByWorldSeed defaults false to match the reference's fixed noise seed/phase.
+Enabling it translates the same shared texture by a reproducible saved-world-seed offset.
+Reloading chunks does not create random samples or reset local UVs.
 
-## Diagonal line diagnosis
-VISUALS/VisualConfig.tres owns the active sun settings; SunLighting applies them on world startup.
-1. Uncheck SunShadows and restart gameplay. If the lines disappear, shadow self-interference is confirmed.
-2. Re-enable SunShadows. Try ShadowNormalBias 1.5, then 2.0 if needed, restarting each time.
-3. If necessary try ShadowBias 0.15, then 0.2. Stop increasing if shadows visibly detach or become too thin.
-Current code defaults: normal bias 1.0, bias 0.1, max shadow distance 45 m.
-These are diagnostic starting values, not verified settings for every camera/renderer.
-If lines remain with shadows disabled, inspect shader/detail or other rendering artifacts instead.
-Lighting was deliberately not changed by this surface-detail pass.
+The previous shader used custom hash/value noise, altered masks, a mandatory soil base and competing normalized grass/dust weights.
+Those no longer drive the main ground shader. Old helpers retained on disk are unreferenced legacy utilities.
 
-## Cohesive ground pass
-Reviewed the 2D GroundSun shader, generic grass/dust/mud/basalt/grey/steep rock recipes,
-BiomeGroundMap's padded biome/slope maps, and GroundFog's separate animated overlay.
-The relevant lesson is dominant mineral ground, subordinate surface masks and restrained scale-separated detail.
-This pass does not copy 2D biome-map baking, painted lighting, heavy Voronoi rock loops, or fog into the 3D shader.
+## Test defaults
+Exact reference basalt/dust/mineral numeric palette and composition defaults: dust 0.55, minerals 0.32.
+No grass, soil replacement, mud, or stony overlay by default.
+Grey exposed rock starts at 22° and reaches full strength at 38°; angular blocks are enabled.
+No new fog, lights, cast-shadow tuning, terrain geometry, collision, streaming, player or camera behavior.
+Colour coefficients are bound directly (without an extra source_color conversion) to preserve original formula values.
+They are configurable in the C# profile Inspector; changes are applied on game startup.
 
-### Current composition
-- Mineral soil is the continuous base; normalized secondary weights leave at least 35% base before slope rock.
-- Coverage locates regions; GrassBlendStrength/DustBlendStrength limit how strongly they alter the base.
-- Test's secondary strengths total at most 0.62, so its base retains at least 38% on gentle ground.
-- Broad 42 m masks are rotated/stretched and lightly warped for fixed directional ground flow.
-- Fine 0.22 m detail and filtered grain define material identity; medium-scale high-contrast colour mottling is removed.
-- A muted charcoal/olive/earth palette keeps secondary materials related.
-- Grass fades toward base soil between 12–28 degrees; rock starts at 30 and reaches full strength at 48 degrees.
-- Slope breakup is small and affects masks, not coordinate rotation, preventing contour-following streaks.
-- Two broad noise octaves replace the former four-octave field for each competing patch.
-- One shared material, no per-frame updates, new texture allocations or per-chunk duplicates.
-- Visual patterns remain tied to absolute world coordinates and saved seed; no TIME or camera-space placement.
-- Heights, mesh, collision, streaming, player, camera, light and fog code are unchanged.
-
-### Inspector tuning
-Edit WORLD/Generation/Biomes/Definitions/Test/Surfaces/TestSurfaces.tres and restart gameplay:
+## Inspector controls
+Edit WORLD/Generation/Biomes/Definitions/Test/Surfaces/TestSurfaces.tres, rebuild C# first, then restart gameplay.
 | Setting | Effect |
 | --- | --- |
-| SoilLow / SoilHigh | Dominant mineral-earth palette |
-| GrassCoverage / DustCoverage | Region distribution; not exact area percentages |
-| GrassBlendStrength / DustBlendStrength | Secondary material influence; lower for more base |
-| PatchScaleMeters | Larger = broader regional change |
-| BlendSoftness | Larger = gentler transitions |
-| FlowAngleDegrees / FlowStretch | Direction and elongation; stretch 1 removes elongation |
-| WarpStrength | Gentle bending of the broad regions |
-| MacroVariation | Broad brightness modulation, independent of grain |
-| DetailScaleMeters / DetailStrength | Fine material size and intensity |
-| SoilStartDegrees / SoilFullDegrees | Fade vegetation toward soil on intermediate slopes |
-| RockStartDegrees / RockFullDegrees | Exposed rock transition on steep ground |
-| Material colour pairs | Biome palette remains fully editable |
+| BasaltLow / BasaltHigh | Dominant charcoal volcanic base |
+| DustCoverage / DustBlendStrength | Deposit distribution / influence |
+| MineralAmount / MineralLow / MineralHigh | Sparse reflected mineral seams |
+| RockStartDegrees / RockFullDegrees | Smooth exposed-rock slope transition |
+| SteepRockBlocks | Original angular joints versus cheaper grey-rock recipe |
+| Rock/SteepRock colour pairs | Weathered stone and mountain-face palette |
+| WeatheredRockAmount | Optional grey-rock patches on flatter ground (default 0) |
+| MetersPerReferenceTile | World scale of all reference details; larger stretches materials |
+| DepositScale | Broad dust/mineral scale only; larger broadens deposits |
+| BlendSoftness | Original mask widths at 1; lower sharpens, higher softens |
+| GrainStrength / FractureStrength | Fine grain and joint intensity; reference values at 1 |
+| DetailStrength / ReliefStrengthMeters | Subtle engine-lit microrelief; set relief to 0 to compare flat albedo |
+| SurfaceBrightness | Material brightness without altering scene lighting; reference coefficients at 1 |
+| Optional grass/soil/mud/stony controls | Future biome flexibility; Test stays barren |
 
-Test seam continuity, repeat visits, seed restart, disabled-secondary base, and gentle/intermediate/steep slopes.
-Static checks cover uniform bindings, weight sums/bounds and shader structure. Live Godot compilation,
-appearance and GPU timings remain unverified in this environment. Fewer noise calls do not establish a measured FPS improvement.
-The 2D reference also has darker lighting, long shadows, detailed props and mist; those differences remain outside this pass.
+## Lighting/relief differences from 2D
+Original canvas shader multiplies colour by custom world sunlight and a sunward sampled brightness relief.
+The spatial shader uses real mesh normals and Godot's lights, shadows and ambient lighting.
+Reference relief's dust/grass attenuation is retained, but a small derivative normal perturbation replaces baked directional brightness.
+This does not displace vertices or modify collision; it can be disabled with ReliefStrengthMeters = 0.
+The 2D fog overlay, path geometry mask, surface resource deposits, richer rock sprites and custom shadow pipeline are not ported here.
+The screenshot therefore cannot be expected to match pixel for pixel even with identical material formula coefficients.
+
+## Performance and limitations
+One shared 512 × 512 noise texture and one material for all Test chunks; no per-chunk duplicates.
+NoiseTexture2D generates asynchronously once, so initial frames may precede its completed image.
+Mipmap filtering reduces distant grain shimmer. No full-world colour bake or per-frame CPU sampling.
+Flat Test ground takes five shared noise texture reads. Optional layers add samples only when enabled.
+Steep fragments run the original 18-cell fracture searches; turn off SteepRockBlocks for a cheaper mountain material.
+This is a direct reference port, not a measured performance improvement. GPU timing remains unmeasured.
+The reference noise texture repeats; original differing sample frequencies/offsets reduce obvious coordinated repetition.
+Very large coordinates still require the project's future logical-coordinate/floating-origin solution.
+
+## Verification
+Static checks verify formula parity (default parameters), exact reference texture settings, uniform/resource binding,
+disabled grass defaults, signed absolute-coordinate continuity, and no geometry/simulation files changed.
+Godot/.NET are unavailable here: C# build, shader compilation, rendered comparison and GPU timings are NOT claimed.
+After pulling:
+1. Build C#, restart World.tscn; inspect shader errors if any.
+2. Wait for the shared noise image to finish, then compare flat ground to the old screenshot.
+3. Cross positive/negative seams and travel away/back; the same location must retain its pattern.
+4. Climb toward X -100/Z -100; inspect gradual exposed-rock transition and angular joints.
+5. Compare SteepRockBlocks on/off and ReliefStrengthMeters 0/0.035.
+6. Inspect colours with unchanged scene lighting. If too dark, adjust SurfaceBrightness modestly (e.g. 1.1–1.3).
+7. Confirm Test.tres still references TestSurfaces.tres after resource editing.
