@@ -3,14 +3,21 @@ using Godot;
 // Independent world-owned camera; no Camera3D is nested under the player.
 public partial class IsometricCamera : Camera3D
 {
+    #region References
     [Export] public CameraConfig Config { get; set; }
     [Export] public Node3D Target { get; set; }
 
+    #endregion
+
+    #region Camera Updates
+    // =========================================================
+    // Set the projection and bounded clipping range before the first rendered frame.
     public override void _Ready()
     {
         Config ??= GD.Load<CameraConfig>("res://CAMERA/CameraConfig.tres");
         Projection = ProjectionType.Orthogonal;
         Size = Config.OrthographicSize;
+        Far = Mathf.Max(Near + 1f, Config.FarClipMeters);
         Current = true;
         // Updated every render frame; avoid interpolating the camera a second time.
         PhysicsInterpolationMode = PhysicsInterpolationModeEnum.Off;
@@ -18,6 +25,8 @@ public partial class IsometricCamera : Camera3D
         LookAt(Target?.GlobalPosition ?? Vector3.Zero, Vector3.Up);
     }
 
+    // =========================================================
+    // Follow the rendered player position without adding a second interpolation pass.
     public override void _Process(double delta)
     {
         if (Target == null) return;
@@ -29,6 +38,11 @@ public partial class IsometricCamera : Camera3D
         LookAt(GlobalPosition - Offset(), Vector3.Up);
     }
 
+    #endregion
+
+    #region View Geometry
+    // =========================================================
+    // Fixed view direction with a configurable physical camera distance.
     private Vector3 Offset()
     {
         float elevation = Mathf.DegToRad(Config.DownwardAngleDegrees);
@@ -38,4 +52,6 @@ public partial class IsometricCamera : Camera3D
             Mathf.Sin(elevation) * Config.CameraDistance,
             Mathf.Cos(azimuth) * horizontal);
     }
+    #endregion
 }
+
