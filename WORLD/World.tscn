@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://msuahynyt07r"]
 
-[ext_resource type="PackedScene" path="res://WORLD/Terrain/TestGround.tscn" id="1"]
+[ext_resource type="Script" path="res://WORLD/Chunks/ChunkManager.cs" id="1"]
+[ext_resource type="Resource" path="res://WORLD/WorldConfig.tres" id="5"]
 [ext_resource type="PackedScene" path="res://PLAYER/Player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://CAMERA/IsometricCamera.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://VISUALS/Lighting/SunLighting.tscn" id="4"]
@@ -30,10 +31,10 @@ environment = SubResource("Environment")
 [node name="Sun" parent="." unique_id=1017337743 node_paths=PackedStringArray("EnvironmentNode") instance=ExtResource("4")]
 EnvironmentNode = NodePath("../WorldEnvironment")
 
-[node name="Terrain" type="Node3D" parent="." unique_id=994123762]
-
-[node name="TestGround" parent="Terrain" unique_id=1826099892 instance=ExtResource("1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+[node name="Terrain" type="Node3D" parent="." unique_id=994123762 node_paths=PackedStringArray("Target")]
+script = ExtResource("1")
+Config = ExtResource("5")
+Target = NodePath("../Player")
 
 [node name="Player" parent="." unique_id=2070331273 node_paths=PackedStringArray("FollowCamera") instance=ExtResource("2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)

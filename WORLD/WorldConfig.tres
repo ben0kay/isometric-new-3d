@@ -1,6 +1,16 @@
-[gd_resource type="Resource" script_class="WorldConfig" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="WorldConfig" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://WORLD/WorldConfig.cs" id="1"]
+[ext_resource type="Resource" path="res://WORLD/Generation/Biomes/Definitions/Test/Test.tres" id="2"]
 
 [resource]
 script = ExtResource("1")
+WorldSeed = 727
+WorldWidthChunks = 32
+WorldLengthChunks = 32
+ChunkSizeMeters = 64
+TerrainCellsPerChunk = 32
+PrototypeBiome = ExtResource("2")
+LoadRadiusChunks = 2
+UnloadRadiusChunks = 3
+ChunksPerFrame = 1

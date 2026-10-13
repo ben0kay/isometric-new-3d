@@ -417,3 +417,13 @@ WORLD/
 ---
 
 **Scope of this document:** project conventions, current ownership, and staged implementation plans. Proposed features are not implemented merely by documenting them.
+
+## 14. First finite Test terrain implementation
+
+T1–T3 are now implemented as a first prototype; runtime verification in Godot is still required.
+World.tscn uses `WORLD/Chunks/ChunkManager.cs` instead of instantiating TestGround.
+`WorldConfig.tres` references the existing Test biome, owns seed/finite dimensions/streaming, and starts at 2048 × 2048 m.
+Biome terrain tuning remains in TestTerrain.tres. Shared HeightSampler, TerrainMeshBuilder and TerrainChunk provide baseline heights, mesh and matching collision.
+WorldBounds and signed ChunkCoordinates own finite indexing. WorldGenerationSettings under Persistence captures versioned creation inputs for future saves.
+No disk persistence is implemented in this pass; S1–S3 remain next. Generic/exclusive content spawning remains later.
+See `WORLD/TERRAIN_PROTOTYPE.md` for tuning, limitations, save integration and executable checks.
