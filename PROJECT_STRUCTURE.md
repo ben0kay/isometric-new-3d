@@ -521,3 +521,11 @@ GroundSurfaceMaterial.cs creates one shared ShaderMaterial from that profile at 
 Soil, grass, dust/gravel and slope rock blend with seeded absolute-coordinate noise. Terrain geometry/collision remain unchanged.
 Profiles without Surfaces retain the previous solid-colour fallback. Multi-biome borders, texture/triplanar mapping and saved appearance snapshots remain later.
 See VISUALS/Surfaces/README.md for tuning and checks. Godot shader compilation and live visual quality require local verification.
+
+## 18. Cohesive Test ground surface refinement
+Ground appearance now uses a dominant mineral-earth base with bounded secondary weights, broader directional masks,
+subtle material detail, intermediate-slope soil and steep-slope rock.
+New surface composition and terrain-flow tuning lives in BiomeSurfaceProfile and Test/Surfaces/TestSurfaces.tres.
+Reusable weighting stays in VISUALS/Surfaces/Shared/ and material recipes in Generic/.
+No terrain simulation, camera, lighting or fog changes accompany this refinement.
+See VISUALS/Surfaces/README.md for Inspector controls and unverified runtime checks.

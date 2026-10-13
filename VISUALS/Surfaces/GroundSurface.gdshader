@@ -1,4 +1,4 @@
-// Layered ground appearance adapted from the 2D material recipes.
+// Cohesive mineral soil with subordinate vegetation/sediment and smooth slope-driven rock.
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
 
@@ -26,6 +26,15 @@ uniform float rock_end = 0.2;
 uniform float detail_scale = 0.7;
 uniform float detail_strength = 0.07;
 uniform float surface_roughness = 0.95;
+uniform float grass_strength = 0.38;
+uniform float dust_strength = 0.24;
+uniform float blend_softness = 0.18;
+uniform float macro_variation = 0.10;
+uniform float soil_start = 0.022;
+uniform float soil_end = 0.117;
+uniform float flow_angle = -0.436332;
+uniform float flow_stretch = 2.8;
+uniform float warp_strength = 0.35;
 varying vec3 ground_position;
 varying vec3 ground_normal;
 
@@ -37,15 +46,22 @@ void vertex() {
 }
 
 // =========================================================
-// Blend irregular patches and material-specific detail in absolute world coordinates.
+// Separate broad correlated regions from subtle grain; lighting remains fully engine-driven.
 void fragment() {
     vec2 p = ground_position.xz;
-    vec2 broad = p / max(patch_scale, 0.1) + seed_offset;
-    vec2 warp = vec2(ground_noise(broad * 0.7 + vec2(13.1, 39.2)),
-        ground_noise(broad * 0.7 + vec2(71.3, 17.8))) - vec2(0.5);
-    float patches = ground_fractal(broad + warp * 0.7);
-    float dust_patches = ground_fractal(broad * 1.37 + warp * 0.5 + vec2(43.7, -21.2));
-    float strata = ground_noise(broad * 2.3 + vec2(7.1, 18.4));
+    float c = cos(flow_angle), s = sin(flow_angle);
+    vec2 flow = vec2(c * p.x - s * p.y, s * p.x + c * p.y);
+    flow.x /= max(flow_stretch, 1.0);
+    vec2 broad = flow / max(patch_scale, 1.0) + seed_offset;
+    vec2 warp = vec2(ground_noise(broad * 0.6 + vec2(13.1, 39.2)),
+        ground_noise(broad * 0.6 + vec2(71.3, 17.8))) - vec2(0.5);
+    vec2 domain = broad + warp * warp_strength;
+    // Two broad octaves, replacing two four-octave coverage fields.
+    float region = ground_noise(domain);
+    region = region * 0.8 + ground_noise(domain * 2.03 + vec2(8.2, 19.7)) * 0.2;
+    float deposit = ground_noise(domain * 0.75 + vec2(43.7, -21.2));
+    float strata = region * 0.7 + deposit * 0.3;
+
     vec2 detail_p = p / max(detail_scale, 0.05) + seed_offset;
     float footprint = max(length(dFdx(detail_p)), length(dFdy(detail_p)));
     float detail_fade = 1.0 - smoothstep(0.3, 1.0, footprint);
@@ -53,16 +69,25 @@ void fragment() {
     float detail = mix(0.5, ground_noise(detail_p), detail_fade);
     float grain = mix(0.5, ground_noise(detail_p * 4.0 + vec2(31.7, 9.2)), grain_fade);
     float pebbles = ground_pebbles(detail_p * 1.1) * detail_fade;
+
     float steepness = 1.0 - clamp(normalize(ground_normal).y, 0.0, 1.0);
-    float rock_weight = smoothstep(rock_start, max(rock_end, rock_start + 0.001),
-        steepness + (strata - 0.5) * 0.025);
-    vec3 color = soil_surface(soil_low.rgb, soil_high.rgb, strata, detail, grain, detail_strength);
-    color = mix(color, grass_surface(grass_low.rgb, grass_high.rgb, strata, detail, grain, detail_strength),
-        surface_mask(patches, grass_coverage) * (1.0 - rock_weight));
-    color = mix(color, dust_surface(dust_low.rgb, dust_high.rgb, strata, detail, grain, pebbles, detail_strength),
-        surface_mask(dust_patches, dust_coverage) * (1.0 - rock_weight));
-    color = mix(color, rock_surface(rock_low.rgb, rock_high.rgb, strata, detail, grain,
-        detail_strength * detail_fade), rock_weight);
+    // Mask breakup affects transition strength, never sampling coordinates.
+    float slope_field = max(0.0, steepness + (deposit - 0.5) * 0.012);
+    float soil_weight = smoothstep(soil_start, max(soil_end, soil_start + 0.001), slope_field);
+    float rock_weight = smoothstep(rock_start, max(rock_end, rock_start + 0.001), slope_field);
+    float grass_weight = surface_mask(region, grass_coverage, blend_softness)
+        * grass_strength * (1.0 - soil_weight);
+    float dust_weight = surface_mask(deposit, dust_coverage, blend_softness)
+        * dust_strength * (1.0 - soil_weight * 0.65);
+    vec3 weights = surface_weights(grass_weight, dust_weight);
+
+    vec3 soil = soil_surface(soil_low.rgb, soil_high.rgb, strata, detail, grain, detail_strength);
+    vec3 grass = grass_surface(grass_low.rgb, grass_high.rgb, strata, detail, grain, detail_strength);
+    vec3 dust = dust_surface(dust_low.rgb, dust_high.rgb, strata, detail, grain, pebbles, detail_strength);
+    vec3 color = soil * weights.x + grass * weights.y + dust * weights.z;
+    vec3 rock = rock_surface(rock_low.rgb, rock_high.rgb, strata, detail, grain, detail_strength * detail_fade);
+    color = mix(color, rock, rock_weight);
+    color *= 1.0 + (region - 0.5) * macro_variation;
     ALBEDO = clamp(color, vec3(0.0), vec3(1.0));
     ROUGHNESS = surface_roughness;
     SPECULAR = 0.15;

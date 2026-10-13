@@ -29,6 +29,17 @@ public static class GroundSurfaceMaterial
         material.SetShaderParameter("detail_scale", Mathf.Max(0.1f, profile.DetailScaleMeters));
         material.SetShaderParameter("detail_strength", Mathf.Clamp(profile.DetailStrength, 0f, 0.5f));
         material.SetShaderParameter("surface_roughness", Mathf.Clamp(profile.Roughness, 0f, 1f));
+        material.SetShaderParameter("grass_strength", Mathf.Clamp(profile.GrassBlendStrength, 0f, 1f));
+        material.SetShaderParameter("dust_strength", Mathf.Clamp(profile.DustBlendStrength, 0f, 1f));
+        material.SetShaderParameter("blend_softness", Mathf.Clamp(profile.BlendSoftness, 0.02f, 0.4f));
+        material.SetShaderParameter("macro_variation", Mathf.Clamp(profile.MacroVariation, 0f, 0.4f));
+        material.SetShaderParameter("flow_angle", Mathf.DegToRad(profile.FlowAngleDegrees));
+        material.SetShaderParameter("flow_stretch", Mathf.Clamp(profile.FlowStretch, 1f, 6f));
+        material.SetShaderParameter("warp_strength", Mathf.Clamp(profile.WarpStrength, 0f, 1f));
+        float soilStart = Mathf.Clamp(profile.SoilStartDegrees, 0f, 60f);
+        float soilEnd = Mathf.Clamp(profile.SoilFullDegrees, soilStart + 1f, 80f);
+        material.SetShaderParameter("soil_start", 1f - Mathf.Cos(Mathf.DegToRad(soilStart)));
+        material.SetShaderParameter("soil_end", 1f - Mathf.Cos(Mathf.DegToRad(soilEnd)));
         uint bits = unchecked((uint)seed);
         material.SetShaderParameter("seed_offset", new Vector2((bits & 65535u) / 64f, (bits >> 16) / 64f));
         return material;

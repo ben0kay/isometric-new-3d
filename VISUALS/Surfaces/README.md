@@ -39,3 +39,45 @@ Current code defaults: normal bias 1.0, bias 0.1, max shadow distance 45 m.
 These are diagnostic starting values, not verified settings for every camera/renderer.
 If lines remain with shadows disabled, inspect shader/detail or other rendering artifacts instead.
 Lighting was deliberately not changed by this surface-detail pass.
+
+## Cohesive ground pass
+Reviewed the 2D GroundSun shader, generic grass/dust/mud/basalt/grey/steep rock recipes,
+BiomeGroundMap's padded biome/slope maps, and GroundFog's separate animated overlay.
+The relevant lesson is dominant mineral ground, subordinate surface masks and restrained scale-separated detail.
+This pass does not copy 2D biome-map baking, painted lighting, heavy Voronoi rock loops, or fog into the 3D shader.
+
+### Current composition
+- Mineral soil is the continuous base; normalized secondary weights leave at least 35% base before slope rock.
+- Coverage locates regions; GrassBlendStrength/DustBlendStrength limit how strongly they alter the base.
+- Test's secondary strengths total at most 0.62, so its base retains at least 38% on gentle ground.
+- Broad 42 m masks are rotated/stretched and lightly warped for fixed directional ground flow.
+- Fine 0.22 m detail and filtered grain define material identity; medium-scale high-contrast colour mottling is removed.
+- A muted charcoal/olive/earth palette keeps secondary materials related.
+- Grass fades toward base soil between 12–28 degrees; rock starts at 30 and reaches full strength at 48 degrees.
+- Slope breakup is small and affects masks, not coordinate rotation, preventing contour-following streaks.
+- Two broad noise octaves replace the former four-octave field for each competing patch.
+- One shared material, no per-frame updates, new texture allocations or per-chunk duplicates.
+- Visual patterns remain tied to absolute world coordinates and saved seed; no TIME or camera-space placement.
+- Heights, mesh, collision, streaming, player, camera, light and fog code are unchanged.
+
+### Inspector tuning
+Edit WORLD/Generation/Biomes/Definitions/Test/Surfaces/TestSurfaces.tres and restart gameplay:
+| Setting | Effect |
+| --- | --- |
+| SoilLow / SoilHigh | Dominant mineral-earth palette |
+| GrassCoverage / DustCoverage | Region distribution; not exact area percentages |
+| GrassBlendStrength / DustBlendStrength | Secondary material influence; lower for more base |
+| PatchScaleMeters | Larger = broader regional change |
+| BlendSoftness | Larger = gentler transitions |
+| FlowAngleDegrees / FlowStretch | Direction and elongation; stretch 1 removes elongation |
+| WarpStrength | Gentle bending of the broad regions |
+| MacroVariation | Broad brightness modulation, independent of grain |
+| DetailScaleMeters / DetailStrength | Fine material size and intensity |
+| SoilStartDegrees / SoilFullDegrees | Fade vegetation toward soil on intermediate slopes |
+| RockStartDegrees / RockFullDegrees | Exposed rock transition on steep ground |
+| Material colour pairs | Biome palette remains fully editable |
+
+Test seam continuity, repeat visits, seed restart, disabled-secondary base, and gentle/intermediate/steep slopes.
+Static checks cover uniform bindings, weight sums/bounds and shader structure. Live Godot compilation,
+appearance and GPU timings remain unverified in this environment. Fewer noise calls do not establish a measured FPS improvement.
+The 2D reference also has darker lighting, long shadows, detailed props and mist; those differences remain outside this pass.

@@ -1,8 +1,8 @@
-// Adapted from the 2D grass recipe: mottled palette, fibres and restrained grain.
+// Sparse ground fibres and fine grain adapted from the 2D grass material.
 // =========================================================
-// Biome tint remains data; no baked sun direction.
+// Small brightness changes preserve material detail without pale camouflage islands.
 vec3 grass_surface(vec3 low_color, vec3 high_color, float strata, float detail, float grain, float strength) {
-    vec3 surface = mix(low_color, high_color, smoothstep(0.15, 0.85, strata));
-    float fibres = smoothstep(0.48, 0.78, detail);
-    return surface * (0.92 + fibres * 0.08 + (grain - 0.5) * strength * 0.22);
+    vec3 surface = mix(low_color, high_color, 0.35 + strata * 0.30);
+    float fibres = smoothstep(0.48, 0.78, detail) - 0.5;
+    return surface * (1.0 + (fibres * 0.07 + (grain - 0.5) * 0.16) * strength);
 }

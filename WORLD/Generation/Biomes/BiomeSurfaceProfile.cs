@@ -32,6 +32,24 @@ public partial class BiomeSurfaceProfile : Resource
     [Export(PropertyHint.Range, "1,89,1")] public float RockFullDegrees { get; set; } = 36f;
     #endregion
 
+    #region Surface Composition
+    [ExportGroup("Surface Composition")]
+    [Export(PropertyHint.Range, "0,1,0.01")] public float GrassBlendStrength { get; set; } = 0.38f;
+    [Export(PropertyHint.Range, "0,1,0.01")] public float DustBlendStrength { get; set; } = 0.24f;
+    [Export(PropertyHint.Range, "0.02,0.4,0.01")] public float BlendSoftness { get; set; } = 0.18f;
+    [Export(PropertyHint.Range, "0,0.4,0.01")] public float MacroVariation { get; set; } = 0.10f;
+    [ExportGroup("Slope Soil")]
+    [Export(PropertyHint.Range, "0,60,1")] public float SoilStartDegrees { get; set; } = 12f;
+    [Export(PropertyHint.Range, "1,80,1")] public float SoilFullDegrees { get; set; } = 28f;
+    #endregion
+
+    #region Terrain Flow
+    [ExportGroup("Terrain Flow")]
+    [Export(PropertyHint.Range, "-180,180,1")] public float FlowAngleDegrees { get; set; } = -25f;
+    [Export(PropertyHint.Range, "1,6,0.1")] public float FlowStretch { get; set; } = 2.8f;
+    [Export(PropertyHint.Range, "0,1,0.05")] public float WarpStrength { get; set; } = 0.35f;
+    #endregion
+
     #region Pattern
     [ExportGroup("Pattern")]
     [Export(PropertyHint.Range, "1,100,0.5")] public float PatchScaleMeters { get; set; } = 14f;
