@@ -436,3 +436,80 @@ Test biome assets live in `Definitions/Test/Content/ObjectsTest/`; `TestContent.
 The strategy implements `WORLD/Contents/Placement/WorldContentGeneration.cs`; shared ChunkManager owns lifecycle and invokes the biome reference.
 This is biome-exclusive placeholder content only; the generic content catalog remains future work.
 Placement IDs are deterministic, but persistence overlays and placement-settings snapshots remain future saving work.
+
+
+## 16. 3D terrain ground surfaces — generic + biome-specific visual profiles
+
+**Next visual task for Codex:** replace the current single-colour terrain material with a deterministic world-space 3D terrain shader supporting natural ground patches, exposed stone on steep slopes, and per-biome surface definitions. This is an architectural design and implementation plan; these new files are **not yet implemented**.
+
+### Ownership and proposed file placement
+
+```text
+VISUALS/
+├── VisualConfig.cs / VisualConfig.tres       # Existing umbrella configuration
+└── Terrain/
+    ├── TerrainSurface.gdshader              # Main shared 3D spatial terrain shader
+    ├── TerrainMaterial.tres                 # Base shader material (if useful)
+    ├── Shared/
+    │   ├── GroundNoise.gdshaderinc          # Seamless deterministic world-space variation
+    │   └── SurfaceBlending.gdshaderinc      # Common slope/noise/mask blending
+    └── Generic/
+        ├── SoilSurface.gdshaderinc
+        ├── GrassSurface.gdshaderinc
+        ├── RockSurface.gdshaderinc
+        ├── GravelSurface.gdshaderinc
+        └── DustSurface.gdshaderinc
+
+WORLD/
+├── WorldConfig.cs / WorldConfig.tres        # World-level seed/chunks + optional surface debug toggles
+├── Generation/
+│   └── Biomes/
+│       ├── BiomeDefinition.cs              # Extend with optional surface-profile reference
+│       ├── BiomeSurfaceProfile.cs           # Shared biome surface settings Resource (future)
+│       └── Definitions/
+│           ├── Test/
+│           │   ├── Test.tres
+│           │   ├── TestTerrain.tres
+│           │   └── Surfaces/
+│           │       └── TestSurfaces.tres    # Biome's colours, weights, scales, slope settings
+│           └── BasaltFlats/                # Future example; NOT an existing biome
+│               ├── BasaltFlats.tres
+│               └── Surfaces/
+│                   ├── BasaltFlatsSurfaces.tres
+│                   └── BasaltSurface.gdshaderinc  # Only for genuinely unique shading logic
+├── Chunks/
+│   ├── ChunkManager.cs                     # Existing material setup / chunk lifecycle
+│   └── TerrainChunk.cs                     # Existing material attachment to mesh
+└── Terrain/
+    └── TerrainMeshBuilder.cs               # Existing geometry + normals + world UVs
+```
+
+`VISUALS/Terrain/` owns reusable **appearance/shaders**; `WORLD/Generation/Biomes/Definitions/<Name>/Surfaces/` owns that biome's **ground palette and blending rules**; `WORLD/Terrain/` owns **mesh/collision geometry**, not shader art. This complements, rather than replaces, `WORLD/Contents/Generic/` and each biome's `Content/`: ground surface coloration is not the same thing as physical rocks, vegetation, decals or harvestable resources.
+
+### Important rendering rules
+
+1. **Generic ≠ universal:** grass/soil/rock/gravel/dust are reusable surface functions. Each biome profile decides which appear and in what proportions. Unique shaders are optional, not required for every biome.
+2. **World-coordinate continuity:** noise and patch masks use continuous absolute X/Z world coordinates, not chunk-local 0–1 UVs or per-chunk random seeds. Check matching colours across loaded chunk seams, including negative chunk indices.
+3. **Slope-aware 3D terrain:** blend exposed rock from surface steepness (e.g. normal versus world up), optionally with altitude and moisture later. Use smooth thresholds and noise breakup so cliffs don't show abrupt contour bands.
+4. **Subtle multi-scale variation:** broad irregular coloured patches plus fine-scale surface texture/grain. Avoid high-contrast checkerboards, perfect circles or overly noisy/blotchy terrain.
+5. **Preserve terrain geometry:** `HeightSampler`, mesh construction and collision remain the same unless a targeted visual integration demands otherwise. Do not fake mountains by changing colour-only height calculations.
+6. **Keep a small shared shader** for the first Test biome (soil, dusty earth, grey stone; optional green grass). Do not build a heavyweight material-variant compiler or dynamic include system prematurely. Godot shader includes are resolved through shader files, not arbitrarily switched at runtime from biome paths.
+7. **Profiles are inspector-friendly:** `BiomeSurfaceProfile.cs` should expose colour pairs/palette, patch scale/strength, slope rock threshold/softness and fine-detail intensity; keep world-wide creation settings in `WorldConfig`, not per-rock palette settings.
+8. **Multiple biomes later:** initially Test is forced across the world. When biome selection arrives, supply interpolated biome parameters/masks (or chunk-associated data textures where necessary) so borders blend smoothly. Avoid one hard material swap per chunk causing colour seams.
+9. **Performance:** begin with a small number of shader layers/noise evaluations, reuse material/shader resources when possible, minimize per-chunk shader copies and uniforms; profile at streaming radii actually used.
+10. **Save contract:** cosmetic shader changes generally need not modify the deterministic heightfield; if visual settings materially define the authored world, version or snapshot their relevant parameters according to the project's save policy.
+
+### Lessons from 2D ground shaders
+
+The 2D repo contains `VISUALS/Drawings/Ground/GrassSurface.gdshaderinc`, `DustSurface.gdshaderinc`, `MudSurface.gdshaderinc`, `GreyRockSurface.gdshaderinc`, `SteepRockSurface.gdshaderinc`, and `RockPatchSurface.gdshaderinc`, plus `WORLD/Chunks/BiomeGroundMap.cs`. Reuse the **separation of shared ground-surface functions and biome-specific data**, not the full 2D bake/upload pipeline: 3D terrain can directly use mesh normals and continuous world positions.
+
+### Suggested implementation stages
+
+- **G1 — Test visual proof:** replace the plain `StandardMaterial3D` in `ChunkManager` (currently uses `WorldConfig.TestGroundColor`) with a shared `ShaderMaterial`; render subtle green-brown soil/dust patches and grey stone on steep slopes. Keep current terrain meshes, collisions, camera and player unchanged.
+- **G2 — Biome data:** implement `BiomeSurfaceProfile.cs` and `Definitions/Test/Surfaces/TestSurfaces.tres`; reference the profile in `Test.tres` and apply its Inspector parameters to the shared material. Do not hardcode Test-specific colours inside `ChunkManager`.
+- **G3 — Generic catalog / new biomes (later):** expand named generic ground surfaces and optional biome-exclusive logic; design blend masks for transitions between biome profiles.
+- **G4 — Optional advanced visuals (later):** texture or triplanar mapping for vertical cliffs, decals, wetness, erosion masks and terrain-appropriate footstep effects.
+
+**Validation:** all adjacent chunks shade without seams; the same absolute coordinate retains the same surface pattern after unloading/reloading; grey rock appears progressively on steeper slopes; Test colour/patch/slope properties are tunable from `.tres`; player collision and terrain height are unchanged. Document measured performance rather than assuming the shader is free.
+
+**Status:** section 16 is documentation only. No new shader, biome surface resource or terrain code was created by this update.
