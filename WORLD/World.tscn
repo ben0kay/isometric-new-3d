@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://msuahynyt07r"]
 
 [ext_resource type="PackedScene" path="res://WORLD/Terrain/TestGround.tscn" id="1"]
 [ext_resource type="PackedScene" path="res://PLAYER/Player.tscn" id="2"]
@@ -6,7 +6,7 @@
 [ext_resource type="PackedScene" path="res://VISUALS/Lighting/SunLighting.tscn" id="4"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
-sky_top_color = Color(0.23, 0.40, 0.64, 1)
+sky_top_color = Color(0.23, 0.4, 0.64, 1)
 sky_horizon_color = Color(0.72, 0.82, 0.89, 1)
 ground_bottom_color = Color(0.16, 0.18, 0.21, 1)
 
@@ -22,20 +22,22 @@ ambient_light_energy = 0.6
 reflected_light_source = 2
 tonemap_mode = 2
 
-[node name="World" type="Node3D"]
+[node name="World" type="Node3D" unique_id=1512358445]
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=79948839]
 environment = SubResource("Environment")
 
-[node name="Sun" parent="." node_paths=PackedStringArray("EnvironmentNode") instance=ExtResource("4")]
+[node name="Sun" parent="." unique_id=1017337743 node_paths=PackedStringArray("EnvironmentNode") instance=ExtResource("4")]
 EnvironmentNode = NodePath("../WorldEnvironment")
 
-[node name="Terrain" type="Node3D" parent="."]
+[node name="Terrain" type="Node3D" parent="." unique_id=994123762]
 
-[node name="TestGround" parent="Terrain" instance=ExtResource("1")]
+[node name="TestGround" parent="Terrain" unique_id=1826099892 instance=ExtResource("1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
 
-[node name="Player" parent="." node_paths=PackedStringArray("FollowCamera") instance=ExtResource("2")]
+[node name="Player" parent="." unique_id=2070331273 node_paths=PackedStringArray("FollowCamera") instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 FollowCamera = NodePath("../IsometricCamera")
 
-[node name="IsometricCamera" parent="." node_paths=PackedStringArray("Target") instance=ExtResource("3")]
+[node name="IsometricCamera" parent="." unique_id=396575037 node_paths=PackedStringArray("Target") instance=ExtResource("3")]
 Target = NodePath("../Player")

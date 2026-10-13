@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="CameraConfig" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CameraConfig" format=3 uid="uid://dve885qww6bv1"]
 
-[ext_resource type="Script" path="res://CAMERA/CameraConfig.cs" id="1"]
+[ext_resource type="Script" uid="uid://cisa4rkxuumpl" path="res://CAMERA/CameraConfig.cs" id="1"]
 
 [resource]
 script = ExtResource("1")
+DownwardAngleDegrees = 30.0
