@@ -9,6 +9,7 @@ public static class PlayerInput
     public const string Back = "move_back";
     public const string Sprint = "player_sprint";
     public const string Jump = "player_jump";
+    public const string AnimationToggle = "player_animation_toggle";
 
     public static void Configure(PlayerConfig config)
     {
@@ -17,6 +18,7 @@ public static class PlayerInput
         SetKey(Forward, config.MoveForwardKey);
         SetKey(Back, config.MoveBackKey);
         SetKey(Sprint, config.SprintKey);
+        SetKey(AnimationToggle, config.AnimationToggleKey);
         SetMouse(Jump, config.JumpMouseButton);
     }
 
@@ -45,4 +47,5 @@ public static class PlayerInput
     public static Vector2 ReadMovement() => Input.GetVector(Left, Right, Forward, Back);
     public static bool SprintHeld => Input.IsActionPressed(Sprint);
     public static bool JumpPressed => Input.IsActionJustPressed(Jump);
+    public static bool AnimationTogglePressed => Input.IsActionJustPressed(AnimationToggle);
 }

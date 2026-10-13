@@ -52,6 +52,8 @@ motion are future refinements. The imported bones remain editable in Blender.
 
 | Setting | Purpose |
 | --- | --- |
+| AnimationEnabled | Enable animation or freeze the model in a neutral idle pose |
+| AnimationToggleKey | Runtime diagnostic toggle, F8 by default |
 | ModelScale / ModelOffsetY | Fit the visual to the existing 1.8 m capsule |
 | AnimationBlendSeconds | Transition duration between clips |
 | AnimationMoveThreshold | Velocity below which idle plays |
@@ -86,3 +88,17 @@ If the model is subsequently edited in Blender, export glTF Binary (`.glb`) over
 the model path, including skinning and actions. Keep the clip names above. The
 Python generator regenerates the prototype and will overwrite Blender changes
 to the GLB, so do not run it over a hand-edited model unintentionally.
+
+## Temporarily disable animations
+
+Press F8 while playing to toggle all skeletal animations off/on. Disabled mode
+freezes the first idle pose; it does not keep breathing, bobbing or blending.
+Movement, collision, cursor facing, camera, sprint and jumping continue normally.
+The Output panel reports ON/OFF. This is a session-only change; restarting reloads
+AnimationEnabled from PlayerConfig.tres (true by default). To start with animations
+off, uncheck AnimationEnabled in that resource before running.
+
+For the current jitter investigation, walk horizontally on clear ground, press F8
+and repeat, then compare diagonal travel. If the frozen model and terrain still
+judder, investigate movement/camera timing; if it disappears, investigate the rig
+and animation selection. This toggle does not claim to fix the underlying jitter.

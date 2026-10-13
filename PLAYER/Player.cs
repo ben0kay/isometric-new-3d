@@ -17,6 +17,11 @@ public partial class Player : CharacterBody3D
 
 	public override void _PhysicsProcess(double delta)
 	{
+		if (PlayerInput.AnimationTogglePressed)
+		{
+			Config.AnimationEnabled = !Config.AnimationEnabled;
+			GD.Print($"Player animations: {(Config.AnimationEnabled ? "ON" : "OFF")}");
+		}
 		if (FollowCamera == null)
 			return;
 

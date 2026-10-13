@@ -10,6 +10,7 @@ public partial class PlayerAnimator : Node3D
     private string _current = "";
     private bool _wasGrounded, _initialized;
     private bool _moving, _running;
+    private bool _animationEnabled;
     private int _travelDirection;
     private float _playbackSpeed = 1f;
     private float _jumpStartRemaining, _landingRemaining;
@@ -44,7 +45,7 @@ public partial class PlayerAnimator : Node3D
         var model = GetNode<Node3D>("Model");
         model.Scale = Vector3.One * config.ModelScale;
         model.Position = new Vector3(0, config.ModelOffsetY, 0);
-        Play("Idle");
+        ApplyAnimationToggle(true);
     }
 
     // Called by Player after movement and cursor-facing have been updated.
@@ -52,6 +53,8 @@ public partial class PlayerAnimator : Node3D
     public void Tick(CharacterBody3D body, double delta)
     {
         if (_animations == null || _config == null) return;
+        ApplyAnimationToggle();
+        if (!_animationEnabled) return;
         float dt = (float)delta;
         bool grounded = body.IsOnFloor();
         bool landed = _initialized && !_wasGrounded && grounded;
@@ -104,6 +107,29 @@ public partial class PlayerAnimator : Node3D
         float weight = 1f - Mathf.Exp(-_config.AnimationSpeedSmoothness * dt);
         _playbackSpeed = Mathf.Lerp(_playbackSpeed, targetSpeed, weight);
         Play(gait, _playbackSpeed);
+    }
+
+    // Freeze in a neutral idle pose for movement diagnosis, and resume cleanly.
+    // =========================================================
+    private void ApplyAnimationToggle(bool force = false)
+    {
+        if (_animations == null || _config == null) return;
+        if (!force && _animationEnabled == _config.AnimationEnabled) return;
+        _animationEnabled = _config.AnimationEnabled;
+        _initialized = false;
+        _moving = _running = false;
+        _jumpStartRemaining = _landingRemaining = 0;
+        _playbackSpeed = 1f;
+        _current = "";
+        _animations.Stop();
+        _animations.SpeedScale = 1f;
+        if (_animationEnabled) Play("Idle");
+        else if (_clips.TryGetValue("Idle", out string idle))
+        {
+            _animations.Play(idle, 0);
+            _animations.Seek(0, true);
+            _animations.Pause();
+        }
     }
 
     // Hold a direction beyond its boundary so tiny aiming changes cannot chatter.

@@ -16,6 +16,7 @@ public partial class PlayerConfig : Resource
 	[Export(PropertyHint.Range, "0,30,0.5")] public float VisualTurnSpeed { get; set; } = 12f;
 
 [ExportGroup("Model and Animation")]
+[Export] public bool AnimationEnabled { get; set; } = true;
 [Export(PropertyHint.Range, "0.1,3,0.05")] public float ModelScale { get; set; } = 0.95f;
 [Export] public float ModelOffsetY { get; set; } = -0.9f;
 [Export(PropertyHint.Range, "0,1,0.01")] public float AnimationBlendSeconds { get; set; } = 0.12f;
@@ -31,5 +32,6 @@ public partial class PlayerConfig : Resource
 	[Export] public Key MoveForwardKey { get; set; } = Key.Up;
 	[Export] public Key MoveBackKey { get; set; } = Key.Down;
 	[Export] public Key SprintKey { get; set; } = Key.Shift;
+	[Export] public Key AnimationToggleKey { get; set; } = Key.F8;
 	[Export] public MouseButton JumpMouseButton { get; set; } = MouseButton.Right;
 }
