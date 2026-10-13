@@ -321,6 +321,99 @@ WORLD/Generation/
 
 **Implementation status:** Test biome resource classes and assets are scaffolded as definition data. They are **not connected** to terrain generation or `World.tscn` yet; Codex's terrain pass will integrate them. Do not mistake a resource file for a working procedural mesh.
 
+
+## 13. World content: generic library + biome-exclusive assets
+
+**Decision:** support both a reusable generic world-content library and content authored inside a specific biome. Folder ownership identifies where definitions/assets are maintained; **biome content profiles determine where they actually spawn**. A generic object is *eligible* for reuse, not automatically spawned everywhere.
+
+### Target layout (future files are examples, not yet implemented)
+
+```text
+WORLD/
+├── WorldConfig.cs
+├── WorldConfig.tres
+├── Generation/
+│   ├── Biomes/
+│   │   ├── BiomeDefinition.cs
+│   │   ├── BiomeCatalog.cs                 # Future
+│   │   ├── BiomeSampler.cs                 # Future
+│   │   └── Definitions/
+│   │       ├── Test/
+│   │       │   ├── Test.tres               # Already scaffolded
+│   │       │   ├── TestTerrain.tres        # Already scaffolded
+│   │       │   └── Content/
+│   │       │       └── TestContent.tres    # Future
+│   │       ├── BasaltFlats/
+│   │       │   ├── BasaltFlats.tres
+│   │       │   ├── BasaltFlatsTerrain.tres
+│   │       │   └── Content/
+│   │       │       ├── BasaltFlatsContent.tres
+│   │       │       ├── Rocks/
+│   │       │       │   └── BasaltColumn/
+│   │       │       │       ├── BasaltColumn.tres
+│   │       │       │       └── BasaltColumn.tscn
+│   │       │       └── Plants/
+│   │       │           └── AshFrond/
+│   │       │               ├── AshFrond.tres
+│   │       │               └── AshFrond.tscn
+│   │       └── RockyMountains/
+│   │           ├── RockyMountains.tres
+│   │           ├── RockyMountainsTerrain.tres
+│   │           └── Content/
+│   │               ├── RockyMountainsContent.tres
+│   │               └── Rocks/
+│   │                   └── CliffBoulder/
+│   │                       ├── CliffBoulder.tres
+│   │                       └── CliffBoulder.tscn
+│   └── Placement/
+│       └── PlacementRules.cs              # Shared environmental validation
+├── Contents/
+│   ├── Shared/
+│   │   └── WorldObjectDefinition.cs      # Shared type/identity/scene reference
+│   ├── Generic/
+│   │   ├── GenericContentCatalog.tres     # Reusable catalog, not a universal spawner
+│   │   ├── Rocks/
+│   │   │   ├── SmallRock/
+│   │   │   │   ├── SmallRock.tres
+│   │   │   │   └── SmallRock.tscn
+│   │   │   └── Boulder/
+│   │   │       ├── Boulder.tres
+│   │   │       └── Boulder.tscn
+│   │   └── Plants/
+│   │       └── CommonFrond/
+│   │           ├── CommonFrond.tres
+│   │           └── CommonFrond.tscn
+│   └── Placement/
+│       ├── WorldObjectSpawner.cs          # One shared deterministic placement system
+│       └── WorldObjectPlacementProfile.cs # Resource describing density/constraints
+└── Chunks/                                # Shared streaming/runtime ownership
+```
+
+### Ownership rules
+
+1. **Generic library:** reusable rocks, plants, and eventually other resources are defined once in `WORLD/Contents/Generic/` and referenced by any number of biome content profiles.
+2. **Biome-exclusive content:** truly biome-specific objects live with that biome under `Definitions/<Biome>/Content/<Category>/<ObjectName>/`. A matching `.tres` holds the definition and a `.tscn` holds the instance/presentation (with meshes/materials nearby as appropriate).
+3. **No content duplication:** one `SmallRock.tres` should be referenced from multiple profiles, not copied into every biome. If an originally exclusive object is reused broadly, share its definition; move it only when useful, respecting Godot resource paths and UIDs.
+4. **Biome content profile:** `TestContent.tres`, `BasaltFlatsContent.tres`, etc., hold *references* to placement entries for both generic and exclusive objects. Biomes opt in or out of every available object; generic does **not** mean universal.
+5. **One shared spawner:** `WorldObjectSpawner` applies profiles per chunk, with deterministic seed/coordinates and stable generated object IDs. Avoid `BasaltFlatsRockSpawner.cs` / `TestRockSpawner.cs` duplicates.
+6. **Shared placement rules:** each entry may tune density, grouping, spacing, slope, height/elevation, surface/biome restrictions and exclusion zones. Use a shared definition/entry type and optional specialized placement strategies only for genuinely different phenomena.
+7. **Avoid double ownership:** `WORLD/Generation/Placement/` should hold reusable geographical checks/planning; `WORLD/Contents/Placement/` owns runtime prop spawn placement. If they overlap, consolidate instead of building two competing spawners.
+8. **Save-awareness:** procedural placement is order-independent; removed/harvested objects remain removed when their chunk reloads using persistent overrides keyed by stable IDs. Chunk unloading should not rewrite procedural defaults.
+9. **Global-config discipline:** `WORLD/WorldConfig.tres` owns seed/bounds/chunk streaming and high-level test-mode controls. Biome profiles own content densities and local rules. Do not put every rock and plant's settings in WorldConfig.
+10. **Separation from terrain:** content placement reads sampled elevation/slope and biome identity, but terrain mesh generation does not depend on what plants happen to spawn.
+
+### First end-to-end content test for Codex (AFTER terrain chunks work)
+
+- Create `TestContent.tres` and reference it from `Test.tres`.
+- Create one generic `SmallRock` definition plus placeholder scene.
+- Create one Test-exclusive plant/rock definition under `Definitions/Test/Content/`.
+- Use a single shared placement system to spawn both, under deterministic placement profiles.
+- Verify identical placements after exiting and re-entering a chunk, across seam boundaries, and after relaunching with the same seed.
+- Verify spawn density can be tuned independently for Test without modifying generic assets or affecting unrelated biomes.
+- Only later add loot, harvesting, creatures or save mutations.
+
+**Implementation status:** this section documents folder placement and future behaviour only. The generic catalog, content profiles and spawner are not created by this documentation update.
+
 ---
 
 **Scope of this document:** project conventions, current ownership, and staged implementation plans. Proposed features are not implemented merely by documenting them.
