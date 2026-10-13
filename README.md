@@ -2,22 +2,21 @@
 
 Side prototype to the 2D Godot/C# game. Separate architecture, shared gameplay vision.
 
-## Prototype controls and rendering
+## Prototype controls
 - **Arrow keys**: move relative to the isometric camera.
+- **Shift** (hold): sprint; multiplier configurable in PlayerConfig.
+- **Right mouse button**: jump while grounded; jump velocity configurable in PlayerConfig.
 - **Mouse cursor**: face the cursor independently of movement, including while idle.
-- Flat test surface with collision, orthographic follow camera, and directional sunlight with shadows.
-- The player uses a capsule placeholder. A small nose marker indicates its facing direction.
 
-Open in **Godot 4.7 .NET** with .NET 8 SDK, build C#, then press F5.
+Open in **Godot 4.7 .NET** with the .NET 8 SDK, build C#, then press F5.
 
-## Master settings
-- `PLAYER/PlayerConfig.tres`: movement speed, acceleration, cursor-facing, turn speed, **all currently implemented action key bindings**.
+## Master configs
+- `PLAYER/PlayerConfig.tres`: all implemented control bindings, movement speed, sprint, jump, cursor facing.
 - `CAMERA/CameraConfig.tres`: camera angle, azimuth, size and smoothing.
 - `WORLD/WorldConfig.tres`: test ground size.
-- `VISUALS/VisualConfig.tres`: sun angle, shadow enable/quality, ambient strength.
-- `CORE/CoreConfig.cs` and `DEBUG/DebugConfig.cs`: reserved for future settings.
+- `VISUALS/VisualConfig.tres`: sunlight, shadow enable/quality, ambient light.
 
-Key bindings are created from PlayerConfig at game startup. This avoids duplicate keys stored in project.godot.
-Directional shadow-map resolution is raised to 4096, and sunlight shadow coverage is limited to improve close-up detail. If the shadow still shows artifacts, try ShadowBias and ShadowNormalBias in VisualConfig and check the selected rendering backend.
-
-See `NOTES/ARCHITECTURE.md` for architecture decisions. This commit is not runtime-tested in Godot.
+Inputs are bound at startup from the PlayerConfig resource, rather than duplicated inside project.godot.
+The 1920×1080 project window settings from the subsequent local push are preserved.
+The Godot-generated C# UID files from that push are also retained.
+See `NOTES/ARCHITECTURE.md` for responsibilities. Runtime build/test is still pending.
