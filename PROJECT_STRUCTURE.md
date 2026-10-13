@@ -130,6 +130,151 @@ The 2D project already separates `PLAYER/`, `WORLD/`, `ENTITIES/`, `COMBAT/`, `I
 - [ ] Can its performance be measured and tested in isolation?
 - [ ] Did we update documentation when changing architecture?
 
+
+## 9. Terrain generation & chunk streaming — next implementation
+
+**Goal:** Replace the flat test ground with real, walkable 3D terrain that supports mountains, valleys and slopes. The isometric camera continues to follow the player's actual Y elevation. Work within `WORLD/`, not a new root-level `TERRAIN/` umbrella. This section is a **plan** and does not claim these files already exist.
+
+### Proposed focused folder layout
+
+```text
+WORLD/
+├── WorldConfig.cs                  # Umbrella master config (already exists)
+├── WorldConfig.tres                # Editable resource (already exists)
+├── World.tscn                      # World composition (already exists)
+├── Coordinates/
+│   ├── WorldCoordinates.cs        # Stable logical/world-space conversions
+│   └── ChunkCoordinates.cs        # Signed chunk indices, including negatives
+├── Boundaries/
+│   └── WorldBounds.cs             # Single authoritative finite/unbounded policy
+├── Generation/
+│   ├── WorldSeed.cs               # Seeded deterministic random streams
+│   ├── WorldGenerator.cs          # Coordinates generation services
+│   └── Terrain/
+│       ├── HeightSampler.cs       # Pure elevation sampling in X/Z
+│       └── TerrainGenerator.cs    # Chunk terrain data generation
+├── Chunks/
+│   ├── ChunkManager.cs            # Requests, activates and retires chunks
+│   ├── TerrainChunk.cs            # Runtime chunk node/ownership
+│   └── ChunkLifecycle.cs          # Explicit loading/ready/retirement states
+├── Terrain/
+│   ├── TerrainMeshBuilder.cs      # Mesh from sampled heights
+│   ├── TerrainCollisionBuilder.cs # Matching collision geometry
+│   └── TestGround.tscn            # Existing test scene; retire only after replacement works
+└── Persistence/
+    └── WorldChangeStore.cs        # Future overlay of user-modified chunk data
+```
+
+These filenames are a **suggested ownership map**, not a request to generate numerous placeholder scripts. Codex should create files as needed, keep the implementation simple, and preserve `World.tscn`, `PLAYER/` and `CAMERA/` unless integration explicitly requires small changes.
+
+### Master `WorldConfig` — future groups
+
+- **World boundaries:** `FiniteWorld` (true by default), `WorldWidthKm`, `WorldLengthKm`. Provisional full-size target: **512 × 512 km**, NOT a commitment; start runtime tests with a **2 × 2 km** world.
+- **Generation:** `WorldSeed` (a deterministic seed captured per new save), `ChunkSizeMeters` (candidate: **64 m**; lock per-save once released).
+- **Terrain:** `TerrainHeightScale`, `TerrainFeatureScale`, optional slope and noise settings.
+- **Streaming:** `LoadRadiusChunks`, `UnloadRadiusChunks` (unload must exceed load), per-frame generation/collision budgets.
+- **Debug:** chunk outlines, seed display, loaded/queued chunk counters, regeneration diagnostics.
+- **Existing prototype:** retain test-ground colour, grid, size and test blocks until the streamed ground replaces them.
+
+Sample values are **initial tuning assumptions** to validate, not promises of performance. `WorldConfig.tres` should remain the authoritative resource rather than duplicating values across scene exports and scripts.
+
+### Non-negotiable terrain rules
+
+1. **Generation order independent.** A chunk produces the same geometry for the same saved seed/config and signed chunk coordinate, regardless of neighbour-load order.
+2. **Seamless boundaries.** Sample heights using global coordinates so adjacent chunk edges match exactly; use consistent mesh grid resolution and collision.
+3. **Real 3D physical height.** Ground meshes and collision share an elevation source. Keep player physics on `CharacterBody3D` and let the existing world-owned camera follow player Y naturally.
+4. **Bounded streaming.** Schedule preparation and retirement around the player; unload distant chunk nodes, collision and temporary data. Never instantiate a 512 km world in memory.
+5. **Separate data and presentation.** Pure height/biome samplers should not require Godot scene nodes; mesh/collision instantiation belongs to runtime builders.
+6. **Stable coordinates.** Handle negative X/Z consistently (floor division rather than truncation) and plan for precision over hundreds of kilometres, including a floating-origin strategy before long-range tests.
+7. **Clear finite edges.** A single `WorldBounds` answers whether a chunk is playable; an optional unbounded mode should reuse the same generator. Decide visual boundary treatment later.
+8. **Streaming readiness.** Do not let a player fall through terrain merely because its collision chunk has not finished generating; protect the spawn area and prefetch movement direction.
+9. **Do not tie everything to the camera.** Visual load radius, physics collision radius and simulation radius may be tuned independently.
+10. **Future caves/overhangs:** heightfields are suitable for surface ground but cannot directly represent ceilings, tunnels or vertically stacked surfaces. Reserve an explicit custom-mesh/underground-region path.
+
+### Terrain implementation passes for Codex
+
+- **T1 — Config, coordinates and boundary policy.** Unit tests for positive/negative coordinates and chunk edges; preserve present gameplay.
+- **T2 — Stream a grid of flat chunks.** Replace one flat surface only after safe spawn, seamless collision, loading and unloading are demonstrated.
+- **T3 — Deterministic hills.** Real elevations, normals and matching collision; player climbs slopes; camera tracks elevation.
+- **T4 — Visual quality and diagnostics.** Noise shaping, terrain LOD planning, time budgets, profiling and stress tests.
+- **T5 — Biome and macro-landmark planning (later).** Seeded geographical regions, reserved POIs, guaranteed resources and exactly **one** primary endgame lair per world blueprint.
+
+**Acceptance tests:** revisit the same chunk and get identical ground; cross seams without steps or holes; run around chunk boundaries without falling; climb and descend a hill; move beyond load radius and verify old chunks retire; reject out-of-bounds chunks; reproduce a sample from its seed. Do not claim a 512 km playtest until precision and streaming have actually been validated.
+
+## 10. Saving, profiles, boot and world persistence — establish early
+
+**Decision:** Introduce a minimal working save/profile/continue loop **before** populating the world with lots of harvestable resources, creatures and buildings. This avoids the expensive persistence retrofit encountered in 2D. Do **not** implement an entire finished save framework before basic terrain streaming works.
+
+### Suggested future folders
+
+```text
+SYSTEMS/
+├── SystemConfig.cs / SystemConfig.tres   # Umbrella master config when introduced
+└── Saving/
+    ├── SaveManager.cs                   # Save/load coordination
+    ├── SaveManifest.cs                  # World identity, schema version, seed/settings snapshot
+    ├── ProfileManager.cs                # User profiles; distinct from worlds
+    └── SaveVersion.cs                   # Versioning and migration rules
+
+UI/
+├── UiConfig.cs / UiConfig.tres           # UI umbrella settings when introduced
+└── Menus/
+    ├── Boot/
+    │   └── BootScreen.tscn              # Continue, New World, profiles, settings, quit
+    └── Profiles/
+        └── ProfileSelect.tscn
+
+WORLD/
+└── Persistence/
+    └── WorldChangeStore.cs              # Per-world/per-chunk modifications, not terrain generation
+```
+
+`UI/` only presents choices. `SYSTEMS/Saving/` owns profile/world save operations. `WORLD/Persistence/` owns how world changes are represented and re-applied, but must not hard-wire UI menus into terrain.
+
+### Profile, world and save data boundaries
+
+- **Profile:** player identity and selection; a profile may own multiple distinct worlds/save slots later.
+- **World manifest:** persistent world ID, generation seed, generator/version identity, bounds, chunk geometry settings, selected blueprint and creation-time settings snapshot.
+- **Player state:** location in **stable logical coordinates**, including 3D elevation, plus future vitals/inventory.
+- **World blueprint:** planned geography/important POIs saved once on creation; fixed positions must not silently relocate after a generator update.
+- **Changes overlay:** record only persistent differences from procedural defaults (e.g. harvested resource, destroyed robot, built base, modified terrain), keyed by stable world and chunk/object IDs.
+- **Transient runtime:** instantiated nodes, meshes, collision shapes, caches and visible chunks are regenerated and not serialized as full Godot scene trees.
+
+**Restore flow:** load saved manifest/config and player state → generate baseline terrain from seed at the needed chunks → reapply persistent changes → activate colliders/entities → allow gameplay. Terrain generation must work without directly reading the save manager.
+
+### Persistence safeguards from day one
+
+- Use an explicit schema version and migration strategy.
+- Write to a temporary file and replace atomically where practical; keep a recovery backup. Never corrupt the sole save on interrupted writing.
+- Validate profile IDs, world IDs, seed/settings and coordinates before loading. Keep old saves readable or explain incompatibility.
+- Avoid excessive per-frame writes; batch dirty chunk changes and commit on explicit save/periodic safe checkpoints.
+- Stable generated IDs must depend on world ID/seed, chunk coordinates and deterministic object identity, not runtime instance IDs.
+- When chunk nodes unload, persistent modifications must survive. Separate retirement of nodes from retention of dirty/save data.
+- World shrinking, changes to seed, terrain scale, chunk size or generation rules require a migration/new-world policy. Expanding bounds may be supportable if planned carefully.
+- Save files belong in Godot's `user://`, not `res://` or the GitHub repository. Document save paths for testing.
+
+### Save implementation passes for Codex
+
+- **S1 — Manifest/data contracts:** schema version, profile ID, world ID, seed, finite bounds/settings snapshot, player logical position, testable serialization.
+- **S2 — Basic profile + boot flow:** new profile, new world, continue, save and quit; gameplay launched only with valid world context.
+- **S3 — Stable player save/restore:** player position persists across a restart, with safe terrain spawn readiness.
+- **S4 — Chunk modification persistence:** start with one test object or simple persistent edit; unload/reload and restart retain changes.
+- **S5 — Expansion later:** inventory, constructed bases, harvested deposits, creature state, caves and evolving world events.
+
+**Acceptance tests:** create two profiles/worlds without sharing states; save and restart at the same position; travel away/back and get the same terrain; prevent invalid/corrupt saves from crashing; resume safely while terrain collision prepares.
+
+## 11. Agreed sequencing and handoff expectations
+
+1. Let the ongoing Codex work in `PLAYER/Visuals/` complete independently.
+2. Build **T1–T3**: world coordinates, boundaries, flat chunk streaming, then procedural elevation.
+3. Implement **S1–S3**: persistent new-world identity, a minimal boot/profile UI and save/continue.
+4. Add world-edit persistence (**S4**) before serious harvesting/building systems.
+5. Expand to biomes, geological regions, caves, robot/creature population, POI planning and endgame progression once foundations are stable.
+
+For any Codex task: read this root guide and `NOTES/CodePreferences.md`, inspect the live repository head, work in a focused commit, and **do not modify active player animation sources** unless required and explicitly coordinated. Keep generated/editor files where Godot needs them, avoid unnecessary renames, and report tested versus untested behaviour clearly.
+
+**Note:** This section documents design direction only. It does not itself implement terrain generation, profile screens, or saving.
+
 ---
 
-**Scope of this document:** conventions and forward-looking decisions. It does not create the proposed world-generation or progression systems by itself.
+**Scope of this document:** project conventions, current ownership, and staged implementation plans. Proposed features are not implemented merely by documenting them.
