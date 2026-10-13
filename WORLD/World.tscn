@@ -8,6 +8,9 @@
 [ext_resource type="Script" uid="uid://075kcvqiqc4v" path="res://DEBUG/Hud.cs" id="6"]
 [ext_resource type="Resource" path="res://DEBUG/DebugConfig.tres" id="7"]
 
+[ext_resource type="Script" path="res://VISUALS/PostProcessing/WorldGrade.cs" id="grade"]
+[ext_resource type="Resource" path="res://VISUALS/VisualConfig.tres" id="visual_config"]
+
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
 sky_top_color = Color(0.23, 0.4, 0.64, 1)
 sky_horizon_color = Color(0.72, 0.82, 0.89, 1)
@@ -50,3 +53,7 @@ script = ExtResource("6")
 Config = ExtResource("7")
 Target = NodePath("../Player")
 Terrain = NodePath("../Terrain")
+
+[node name="WorldGrade" type="CanvasLayer" parent="."]
+script = ExtResource("grade")
+Config = ExtResource("visual_config")

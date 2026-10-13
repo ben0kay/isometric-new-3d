@@ -5,3 +5,13 @@
 [resource]
 script = ExtResource("1")
 ShadowNormalBias = 1.5
+
+SunEnergy = 1.55
+SunColor = Color(1, 0.95, 0.88, 1)
+AmbientColor = Color(0.55, 0.64, 0.74, 1)
+AmbientEnergy = 0.4
+GradeEnabled = true
+GradeContrast = 1.12
+GradeSaturation = 0.94
+GradeShadowLift = 0.012
+GradeVignette = 0.04
