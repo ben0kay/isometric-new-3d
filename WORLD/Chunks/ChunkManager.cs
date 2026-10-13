@@ -38,9 +38,10 @@ public partial class ChunkManager : Node3D
         _loadRadius = Math.Clamp(Config.LoadRadiusChunks, 1, 5);
         _unloadRadius = Math.Clamp(Config.UnloadRadiusChunks, _loadRadius + 1, 8);
         _budget = Math.Clamp(Config.ChunksPerFrame, 1, 4);
-        _material = new StandardMaterial3D {
-            AlbedoColor = Config.TestGroundColor, Roughness = 1f
-        };
+        var surfaces = Config.PrototypeBiome?.Surfaces;
+        _material = surfaces != null
+            ? GroundSurfaceMaterial.Create(surfaces, GenerationSettings.Seed)
+            : new StandardMaterial3D { AlbedoColor = Config.TestGroundColor, Roughness = 1f };
         if (!_bounds.Contains(ChunkCoordinates.FromPosition(Target.GlobalPosition, GenerationSettings.ChunkSizeMeters)))
             throw new InvalidOperationException("Player spawn lies outside the finite world.");
         ProcessPhysicsPriority = -100;

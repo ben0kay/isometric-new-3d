@@ -513,3 +513,11 @@ The 2D repo contains `VISUALS/Drawings/Ground/GrassSurface.gdshaderinc`, `DustSu
 **Validation:** all adjacent chunks shade without seams; the same absolute coordinate retains the same surface pattern after unloading/reloading; grey rock appears progressively on steeper slopes; Test colour/patch/slope properties are tunable from `.tres`; player collision and terrain height are unchanged. Document measured performance rather than assuming the shader is free.
 
 **Status:** section 16 is documentation only. No new shader, biome surface resource or terrain code was created by this update.
+
+## 17. Implemented Test ground surface prototype
+G1–G2 are connected: VISUALS/Surfaces/GroundSurface.gdshader and reusable Generic/Shared includes render layered ground.
+BiomeSurfaceProfile and Definitions/Test/Surfaces/TestSurfaces.tres own editable appearance; Test.tres references Surfaces.
+GroundSurfaceMaterial.cs creates one shared ShaderMaterial from that profile at world startup, used by ChunkManager.
+Soil, grass, dust/gravel and slope rock blend with seeded absolute-coordinate noise. Terrain geometry/collision remain unchanged.
+Profiles without Surfaces retain the previous solid-colour fallback. Multi-biome borders, texture/triplanar mapping and saved appearance snapshots remain later.
+See VISUALS/Surfaces/README.md for tuning and checks. Godot shader compilation and live visual quality require local verification.

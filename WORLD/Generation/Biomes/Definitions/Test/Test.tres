@@ -1,9 +1,11 @@
-[gd_resource type="Resource" script_class="BiomeDefinition" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="BiomeDefinition" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://WORLD/Generation/Biomes/BiomeDefinition.cs" id="1"]
 [ext_resource type="Resource" path="res://WORLD/Generation/Biomes/Definitions/Test/TestTerrain.tres" id="2"]
 
 [ext_resource type="Resource" path="res://WORLD/Generation/Biomes/Definitions/Test/Content/TestContent.tres" id="3"]
+
+[ext_resource type="Resource" path="res://WORLD/Generation/Biomes/Definitions/Test/Surfaces/TestSurfaces.tres" id="surfaces"]
 
 [resource]
 script = ExtResource("1")
@@ -12,3 +14,5 @@ DisplayName = "Test"
 Enabled = true
 Terrain = ExtResource("2")
 ContentGeneration = ExtResource("3")
+
+Surfaces = ExtResource("surfaces")
