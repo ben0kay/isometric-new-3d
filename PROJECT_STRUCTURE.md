@@ -447,9 +447,9 @@ Placement IDs are deterministic, but persistence overlays and placement-settings
 ```text
 VISUALS/
 ├── VisualConfig.cs / VisualConfig.tres       # Existing umbrella configuration
-└── Terrain/
-    ├── TerrainSurface.gdshader              # Main shared 3D spatial terrain shader
-    ├── TerrainMaterial.tres                 # Base shader material (if useful)
+└── Surfaces/
+    ├── GroundSurface.gdshader              # Main shared 3D spatial terrain shader
+    ├── GroundSurfaceMaterial.tres                 # Base shader material (if useful)
     ├── Shared/
     │   ├── GroundNoise.gdshaderinc          # Seamless deterministic world-space variation
     │   └── SurfaceBlending.gdshaderinc      # Common slope/noise/mask blending
@@ -484,7 +484,7 @@ WORLD/
     └── TerrainMeshBuilder.cs               # Existing geometry + normals + world UVs
 ```
 
-`VISUALS/Terrain/` owns reusable **appearance/shaders**; `WORLD/Generation/Biomes/Definitions/<Name>/Surfaces/` owns that biome's **ground palette and blending rules**; `WORLD/Terrain/` owns **mesh/collision geometry**, not shader art. This complements, rather than replaces, `WORLD/Contents/Generic/` and each biome's `Content/`: ground surface coloration is not the same thing as physical rocks, vegetation, decals or harvestable resources.
+`VISUALS/Surfaces/` owns reusable **appearance/shaders**; `WORLD/Generation/Biomes/Definitions/<Name>/Surfaces/` owns that biome's **ground palette and blending rules**; `WORLD/Terrain/` owns **mesh/collision geometry**, not shader art. This complements, rather than replaces, `WORLD/Contents/Generic/` and each biome's `Content/`: ground surface coloration is not the same thing as physical rocks, vegetation, decals or harvestable resources.
 
 ### Important rendering rules
 
