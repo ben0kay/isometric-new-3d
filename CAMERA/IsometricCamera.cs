@@ -12,6 +12,8 @@ public partial class IsometricCamera : Camera3D
         Projection = ProjectionType.Orthogonal;
         Size = Config.OrthographicSize;
         Current = true;
+        // Updated every render frame; avoid interpolating the camera a second time.
+        PhysicsInterpolationMode = PhysicsInterpolationModeEnum.Off;
         if (Target != null) GlobalPosition = Target.GlobalPosition + Offset();
         LookAt(Target?.GlobalPosition ?? Vector3.Zero, Vector3.Up);
     }
@@ -20,7 +22,8 @@ public partial class IsometricCamera : Camera3D
     {
         if (Target == null) return;
         Size = Config.OrthographicSize;
-        Vector3 desired = Target.GlobalPosition + Offset();
+        // Follow the same position used to render the physics-driven player.
+        Vector3 desired = Target.GetGlobalTransformInterpolated().Origin + Offset();
         float weight = 1f - Mathf.Exp(-Config.FollowSmoothness * (float)delta);
         GlobalPosition = GlobalPosition.Lerp(desired, weight);
         LookAt(GlobalPosition - Offset(), Vector3.Up);
