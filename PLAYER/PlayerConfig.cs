@@ -15,13 +15,15 @@ public partial class PlayerConfig : Resource
 	[Export] public bool FaceCursor { get; set; } = true;
 	[Export(PropertyHint.Range, "0,30,0.5")] public float VisualTurnSpeed { get; set; } = 12f;
 
-	[ExportGroup("Model and Animation")]
-	[Export(PropertyHint.Range, "0.1,3,0.05")] public float ModelScale { get; set; } = 0.95f;
-	[Export] public float ModelOffsetY { get; set; } = -0.9f;
-	[Export(PropertyHint.Range, "0,1,0.01")] public float AnimationBlendSeconds { get; set; } = 0.12f;
-	[Export(PropertyHint.Range, "0.01,1,0.01")] public float AnimationMoveThreshold { get; set; } = 0.12f;
-	[Export(PropertyHint.Range, "0.1,10,0.1")] public float AnimationWalkReferenceSpeed { get; set; } = 1.5f;
-	[Export(PropertyHint.Range, "0.1,15,0.1")] public float AnimationRunReferenceSpeed { get; set; } = 3f;
+[ExportGroup("Model and Animation")]
+[Export(PropertyHint.Range, "0.1,3,0.05")] public float ModelScale { get; set; } = 0.95f;
+[Export] public float ModelOffsetY { get; set; } = -0.9f;
+[Export(PropertyHint.Range, "0,1,0.01")] public float AnimationBlendSeconds { get; set; } = 0.12f;
+[Export(PropertyHint.Range, "0.01,1,0.01")] public float AnimationMoveThreshold { get; set; } = 0.12f;
+[Export(PropertyHint.Range, "0.1,10,0.1")] public float AnimationWalkReferenceSpeed { get; set; } = 1.5f;
+[Export(PropertyHint.Range, "0.1,15,0.1")] public float AnimationRunReferenceSpeed { get; set; } = 3f;
+[Export(PropertyHint.Range, "0,30,1")] public float AnimationDirectionMarginDegrees { get; set; } = 12f;
+[Export(PropertyHint.Range, "1,30,1")] public float AnimationSpeedSmoothness { get; set; } = 10f;
 
 	[ExportGroup("Action Keys")]
 	[Export] public Key MoveLeftKey { get; set; } = Key.Left;

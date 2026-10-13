@@ -9,6 +9,9 @@ public partial class PlayerAnimator : Node3D
     private readonly Dictionary<string, string> _clips = new();
     private string _current = "";
     private bool _wasGrounded, _initialized;
+    private bool _moving, _running;
+    private int _travelDirection;
+    private float _playbackSpeed = 1f;
     private float _jumpStartRemaining, _landingRemaining;
 
     // Resolve imported names once; library prefixes are allowed.
@@ -83,32 +86,65 @@ public partial class PlayerAnimator : Node3D
         }
         Vector3 horizontal = new(body.Velocity.X, 0, body.Velocity.Z);
         float speed = horizontal.Length();
-        if (speed < _config.AnimationMoveThreshold)
+        float moveThreshold = _config.AnimationMoveThreshold * (_moving ? 0.6f : 1f);
+        _moving = speed >= moveThreshold;
+        if (!_moving)
         {
+            _running = false;
+            _playbackSpeed = 1f;
             Play("Idle");
             return;
         }
-        bool running = speed > _config.WalkSpeed * 1.08f;
-        string gait = running ? "Run" : "Walk";
+        _running = speed > _config.WalkSpeed * (_running ? 1.02f : 1.08f);
+        string gait = _running ? "Run" : "Walk";
         Vector3 localTravel = GlobalTransform.Basis.Inverse() * horizontal;
-        // Pick travel relative to the cursor-facing model, not camera input.
-        if (Mathf.Abs(localTravel.X) > Mathf.Abs(localTravel.Z) * 1.15f)
-            gait += localTravel.X < 0 ? "Left" : "Right";
-        else if (localTravel.Z > 0) gait += "Back";
-        float reference = running ? _config.AnimationRunReferenceSpeed : _config.AnimationWalkReferenceSpeed;
-        Play(gait, Mathf.Clamp(speed / Mathf.Max(0.1f, reference), 0.35f, 4f));
+        gait += SelectDirection(localTravel);
+        float reference = _running ? _config.AnimationRunReferenceSpeed : _config.AnimationWalkReferenceSpeed;
+        float targetSpeed = Mathf.Clamp(speed / Mathf.Max(0.1f, reference), 0.35f, 4f);
+        float weight = 1f - Mathf.Exp(-_config.AnimationSpeedSmoothness * dt);
+        _playbackSpeed = Mathf.Lerp(_playbackSpeed, targetSpeed, weight);
+        Play(gait, _playbackSpeed);
     }
 
-    // Blend on changes; retain playback phase while the same clip continues.
+    // Hold a direction beyond its boundary so tiny aiming changes cannot chatter.
+    // =========================================================
+    private string SelectDirection(Vector3 localTravel)
+    {
+        float angle = Mathf.Atan2(localTravel.X, -localTravel.Z);
+        float center = _travelDirection * Mathf.Pi * 0.5f;
+        float distance = Mathf.Abs(Mathf.Wrap(angle - center, -Mathf.Pi, Mathf.Pi));
+        float boundary = Mathf.Pi * 0.25f + Mathf.DegToRad(_config.AnimationDirectionMarginDegrees);
+        if (!IsGait(_current) || distance > boundary)
+        {
+            int nearest = Mathf.RoundToInt(angle / (Mathf.Pi * 0.5f));
+            _travelDirection = (nearest + 4) % 4;
+        }
+        return _travelDirection switch { 1 => "Right", 2 => "Back", 3 => "Left", _ => "" };
+    }
+
+    // Blend gait changes at the same step phase instead of restarting the legs.
     // =========================================================
     private void Play(string clip, float speed = 1f)
     {
         if (_animations == null || !_clips.TryGetValue(clip, out string name)) return;
         _animations.SpeedScale = speed;
         if (_current == clip) return;
+        bool keepPhase = IsGait(_current) && IsGait(clip);
+        double phase = 0;
+        if (keepPhase)
+        {
+            double length = ClipLength(_current);
+            if (length > 0) phase = (_animations.CurrentAnimationPosition / length) % 1.0;
+        }
         _animations.Play(name, _config?.AnimationBlendSeconds ?? 0.12f);
+        // Defer pose evaluation to normal animation processing to retain blending.
+        if (keepPhase) _animations.Seek(phase * ClipLength(clip), false);
         _current = clip;
     }
+
+    // Only looping locomotion clips share a step phase; jumps start at frame zero.
+    // =========================================================
+    private static bool IsGait(string clip) => clip.StartsWith("Walk") || clip.StartsWith("Run");
 
     // Read one-shot durations from the imported asset rather than duplicating them.
     // =========================================================

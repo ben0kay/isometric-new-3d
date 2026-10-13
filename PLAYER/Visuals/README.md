@@ -30,6 +30,9 @@ The animator sets loops at runtime and accepts imported library name prefixes.
 Actual horizontal velocity drives gait and playback speed. Above walking speed,
 the player switches to running. Facing remains controlled by the cursor.
 Travel relative to facing selects forward, backward or side stepping.
+Directional changes use an angular margin to avoid boundary chatter, and gait
+transitions preserve normalized step phase. Playback speed is smoothed, and
+idle/running thresholds have separate entry/exit values to avoid rapid toggling.
 Diagonal travel currently picks its closest directional clip rather than blending
 all directions in an AnimationTree; this is a deliberate prototype simplification.
 
@@ -54,6 +57,8 @@ motion are future refinements. The imported bones remain editable in Blender.
 | AnimationMoveThreshold | Velocity below which idle plays |
 | AnimationWalkReferenceSpeed | Metres/second represented by walk at playback 1 |
 | AnimationRunReferenceSpeed | Metres/second represented by run at playback 1 |
+| AnimationDirectionMarginDegrees | Extra angle before switching travel clips |
+| AnimationSpeedSmoothness | How quickly cadence follows speed changes |
 | WalkSpeed / SprintMultiplier | Actual gameplay movement speed |
 
 Movement defaults and bindings remain arrows, Shift sprint and RMB jump.
