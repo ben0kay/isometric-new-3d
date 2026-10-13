@@ -32,6 +32,6 @@ public partial class PlayerConfig : Resource
 	[Export] public Key MoveForwardKey { get; set; } = Key.Up;
 	[Export] public Key MoveBackKey { get; set; } = Key.Down;
 	[Export] public Key SprintKey { get; set; } = Key.Shift;
-	[Export] public Key AnimationToggleKey { get; set; } = Key.F8;
+	[Export] public Key AnimationToggleKey { get; set; } = Key.F3;
 	[Export] public MouseButton JumpMouseButton { get; set; } = MouseButton.Right;
 }
