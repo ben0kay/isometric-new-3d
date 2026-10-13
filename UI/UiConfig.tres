@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="UiConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://UI/UiConfig.cs" id="1"]
+
+[resource]
+script = ExtResource("1")
+CameraTravelSeconds = 1.25
+FadeSeconds = 0.3
+MainCameraPosition = Vector3(0, 3, 18)
+CampaignCameraPosition = Vector3(0, 3, 6)
+MenuWidth = 430.0
+MenuButtonHeight = 78.0

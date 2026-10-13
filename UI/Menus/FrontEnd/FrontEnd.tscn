@@ -1,0 +1,69 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://UI/Menus/FrontEnd/FrontEnd.cs" id="1"]
+[ext_resource type="Script" path="res://UI/Menus/Main/MainMenu.cs" id="2"]
+[ext_resource type="Script" path="res://UI/Menus/Campaign/CampaignMenu.cs" id="3"]
+[ext_resource type="Resource" path="res://UI/UiConfig.tres" id="4"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
+sky_top_color = Color(0.006, 0.019, 0.033, 1)
+sky_horizon_color = Color(0.014, 0.036, 0.055, 1)
+ground_bottom_color = Color(0.012, 0.02, 0.025, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMaterial")
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 2
+ambient_light_color = Color(0.22, 0.44, 0.52, 1)
+ambient_light_energy = 0.35
+
+[node name="FrontEnd" type="Node3D"]
+script = ExtResource("1")
+Config = ExtResource("4")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="MenuCamera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 18)
+current = true
+fov = 64.0
+
+[node name="AmbientSun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.6, 0.5, 0)
+light_color = Color(0.55, 0.8, 0.95, 1)
+light_energy = 0.45
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="MainMenu" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2")
+
+[node name="CampaignMenu" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3")
+
+[node name="TransitionBlocker" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0

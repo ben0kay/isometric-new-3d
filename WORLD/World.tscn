@@ -9,6 +9,7 @@
 [ext_resource type="Resource" path="res://DEBUG/DebugConfig.tres" id="7"]
 
 [ext_resource type="Script" path="res://VISUALS/PostProcessing/WorldGrade.cs" id="grade"]
+[ext_resource type="Script" path="res://UI/Menus/Pause/PauseMenu.cs" id="pause"]
 [ext_resource type="Resource" path="res://VISUALS/VisualConfig.tres" id="visual_config"]
 
 [sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
@@ -57,3 +58,8 @@ Terrain = NodePath("../Terrain")
 [node name="WorldGrade" type="CanvasLayer" parent="."]
 script = ExtResource("grade")
 Config = ExtResource("visual_config")
+
+[node name="PauseMenu" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 200
+script = ExtResource("pause")
