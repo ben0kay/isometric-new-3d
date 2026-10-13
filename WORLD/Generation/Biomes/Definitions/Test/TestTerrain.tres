@@ -5,5 +5,9 @@
 [resource]
 script = ExtResource("1")
 BaseHeightMeters = 0.0
-HillHeightMeters = 8.0
-FeatureScaleMeters = 180.0
+HillHeightMeters = 18.0
+FeatureScaleMeters = 110.0
+MountainEnabled = true
+MountainCenterMeters = Vector2(-100, -100)
+MountainHeightMeters = 55.0
+MountainRadiusMeters = 120.0

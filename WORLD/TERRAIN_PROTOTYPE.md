@@ -46,3 +46,12 @@ Then play World.tscn:
 6. Keep F8 animation diagnosis available if movement judder returns.
 
 Godot/.NET were unavailable in the authoring environment: live mesh rendering, C# compilation, Jolt collision seams and streaming performance require these local checks.
+
+## Pronounced hills and nearby mountain (generator v2)
+Test now uses hill amplitude 18 m and feature scale 110 m.
+A broad mountain centered at **X -100, Z -100** adds up to **55 m** above the local hills, within radius **120 m**.
+From spawn, head toward decreasing X and Z on the HUD. The mountain starts about 21 m away and the center is about 141 m away.
+Its smooth dome gives a long climb rather than a vertical cliff. Actual elevation includes background noise.
+Tune MountainEnabled, MountainCenterMeters, MountainHeightMeters and MountainRadiusMeters in TestTerrain.tres.
+Mountain inputs are captured in WorldGenerationSettings. New worlds use generator v2; v1 snapshots retain their original mountain-free baseline.
+Live climbing/camera behavior must still be checked in Godot.

@@ -42,6 +42,23 @@ public partial class TerrainPrototypeChecks : Node
             foreach (float x in new[] { -900f, -64f, 0f, 64f, 700f })
                 Check(sampler.Sample(x, 135f) == restoredSampler.Sample(x, 135f), "Snapshot restore reproduces terrain");
             Check(sampler.Sample(0, 0) == settings.BaseHeightMeters, "Safe flat spawn");
+            if (settings.MountainEnabled) {
+                Check(sampler.Sample(settings.MountainCenterX, settings.MountainCenterZ) >
+                    settings.BaseHeightMeters + 40f, "Distinct nearby mountain");
+                for (int i = 0; i <= 200; i++) {
+                    float t = i / 200f;
+                    var normal = sampler.Normal(settings.MountainCenterX * t, settings.MountainCenterZ * t);
+                    Check(normal.Y > Mathf.Cos(Mathf.DegToRad(45)), "Spawn-to-mountain route below 45 degrees");
+                }
+            }
+            var legacy = JsonSerializer.Deserialize<WorldGenerationSettings>(JsonSerializer.Serialize(settings));
+            legacy.GeneratorVersion = 1;
+            var legacyWithMountainFlag = new HeightSampler(legacy);
+            float legacyHeight = legacyWithMountainFlag.Sample(-100, -100);
+            legacy.MountainEnabled = false;
+            var legacyWithoutMountainFlag = new HeightSampler(legacy);
+            Check(legacyHeight == legacyWithoutMountainFlag.Sample(-100, -100),
+                "Version 1 remains mountain-free");
             restored.GeneratorVersion = 999;
             bool rejected = false;
             try { restored.Validate(); } catch (InvalidOperationException) { rejected = true; }

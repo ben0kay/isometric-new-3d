@@ -17,7 +17,18 @@ public sealed class HeightSampler
         float distance = MathF.Sqrt(x * x + z * z);
         float blend = Math.Clamp((distance - 10f) / 22f, 0f, 1f);
         blend = blend * blend * (3f - 2f * blend);
-        return _settings.BaseHeightMeters + (float)noise * _settings.HillHeightMeters * blend;
+        return _settings.BaseHeightMeters + ((float)noise * _settings.HillHeightMeters + Mountain(x, z)) * blend;
+    }
+
+    // =========================================================
+    // Version 2 adds a broad smooth climb with no hard rim or needle-shaped summit.
+    private float Mountain(float x, float z)
+    {
+        if (_settings.GeneratorVersion < 2 || !_settings.MountainEnabled) return 0f;
+        float dx = x - _settings.MountainCenterX, dz = z - _settings.MountainCenterZ;
+        float radius = MathF.Sqrt(dx * dx + dz * dz) / _settings.MountainRadiusMeters;
+        float t = Math.Clamp(1f - radius, 0f, 1f);
+        return _settings.MountainHeightMeters * t * t * (3f - 2f * t);
     }
 
     // =========================================================
