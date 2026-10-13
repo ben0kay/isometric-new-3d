@@ -22,6 +22,8 @@ public partial class PlayerConfig : Resource
     [Export(PropertyHint.Range, "0.01,1,0.01")] public float AnimationMoveThreshold { get; set; } = 0.12f;
     [Export(PropertyHint.Range, "0.1,10,0.1")] public float AnimationWalkReferenceSpeed { get; set; } = 1.5f;
     [Export(PropertyHint.Range, "0.1,15,0.1")] public float AnimationRunReferenceSpeed { get; set; } = 3f;
+    [Export(PropertyHint.Range, "0,30,1")] public float AnimationDirectionMarginDegrees { get; set; } = 12f;
+    [Export(PropertyHint.Range, "1,30,1")] public float AnimationSpeedSmoothness { get; set; } = 10f;
 
     [ExportGroup("Action Keys")]
     [Export] public Key MoveLeftKey { get; set; } = Key.Left;
