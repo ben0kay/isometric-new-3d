@@ -20,3 +20,22 @@ Local validation:
 5. Set coverages to 0/1 and adjust palette/patch size; restart and check expected changes.
 6. Compare collision/movement to before; shader only changes ALBEDO/ROUGHNESS/SPECULAR.
 Godot/.NET were unavailable during authoring. Shader compilation, live appearance and GPU timings require local verification.
+
+## Detail pass adapted from 2D
+The shader now uses four rotated noise octaves and domain-warped masks to make patch edges less blob-like.
+Generic recipes provide grass fibres, soil grain, muted sediment/gravel flecks, and rock fractures.
+Test palette is muted; patch scale is 10 m, medium detail scale 0.35 m, and detail strength 0.35.
+Fine detail fades with screen footprint to reduce shimmer. No physical mesh displacement or baked lighting is added.
+C# surface profile and material factory use regions according to NOTES/CodePreferences.md.
+This remains procedural appearance, not an exact reproduction of the 2D baking/lighting pipeline.
+Extra noise evaluations increase shader cost; GPU performance has not been measured here.
+
+## Diagonal line diagnosis
+VISUALS/VisualConfig.tres owns the active sun settings; SunLighting applies them on world startup.
+1. Uncheck SunShadows and restart gameplay. If the lines disappear, shadow self-interference is confirmed.
+2. Re-enable SunShadows. Try ShadowNormalBias 1.5, then 2.0 if needed, restarting each time.
+3. If necessary try ShadowBias 0.15, then 0.2. Stop increasing if shadows visibly detach or become too thin.
+Current code defaults: normal bias 1.0, bias 0.1, max shadow distance 45 m.
+These are diagnostic starting values, not verified settings for every camera/renderer.
+If lines remain with shadows disabled, inspect shader/detail or other rendering artifacts instead.
+Lighting was deliberately not changed by this surface-detail pass.

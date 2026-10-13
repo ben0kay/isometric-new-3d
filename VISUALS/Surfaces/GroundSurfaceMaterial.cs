@@ -3,6 +3,7 @@ using Godot;
 // Creates one world-shared material from biome data; no per-chunk shader copies.
 public static class GroundSurfaceMaterial
 {
+    #region Material Creation
     // =========================================================
     // Apply bounded profile values and a deterministic seed offset.
     public static ShaderMaterial Create(BiomeSurfaceProfile profile, int seed)
@@ -32,4 +33,6 @@ public static class GroundSurfaceMaterial
         material.SetShaderParameter("seed_offset", new Vector2((bits & 65535u) / 64f, (bits >> 16) / 64f));
         return material;
     }
+    #endregion
 }
+
