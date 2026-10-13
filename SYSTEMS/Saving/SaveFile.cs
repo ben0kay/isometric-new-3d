@@ -5,13 +5,14 @@ using System.IO;
 // File transaction helper shared by the profile index and campaign records.
 public static class SaveFile
 {
+    #region Save Transactions
     // =========================================================
     // Never replace a valid backup with a corrupt old primary. Preserve broken primaries.
     public static void Write(string path, byte[] bytes, Func<string, bool> isValid)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         string temp = path + ".tmp";
-        using (var stream = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None)) {
+        using (var stream = new FileStream(temp, FileMode.Create, System.IO.FileAccess.Write, FileShare.None)) {
             stream.Write(bytes);
             stream.Flush(true);
         }
@@ -29,6 +30,9 @@ public static class SaveFile
         }
     }
 
+    #endregion
+
+    #region Reading
     // =========================================================
     // Limit the amount of malformed file data read into memory.
     public static string ReadText(string path, long maxBytes = 32L * 1024 * 1024)
@@ -37,4 +41,6 @@ public static class SaveFile
             throw new InvalidDataException("Save exceeds the permitted size.");
         return File.ReadAllText(path);
     }
+    #endregion
 }
+
