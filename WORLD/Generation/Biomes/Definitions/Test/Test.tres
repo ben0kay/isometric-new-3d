@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="BiomeDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://WORLD/Generation/Biomes/BiomeDefinition.cs" id="1"]
+[ext_resource type="Resource" path="res://WORLD/Generation/Biomes/Definitions/Test/TestTerrain.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+Id = "test"
+DisplayName = "Test"
+Enabled = true
+Terrain = ExtResource("2")

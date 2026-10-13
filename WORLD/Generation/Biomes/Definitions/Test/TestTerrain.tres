@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="TerrainProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://WORLD/Generation/Biomes/TerrainProfile.cs" id="1"]
+
+[resource]
+script = ExtResource("1")
+BaseHeightMeters = 0.0
+HillHeightMeters = 8.0
+FeatureScaleMeters = 180.0
